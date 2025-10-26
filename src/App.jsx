@@ -5,7 +5,7 @@ import './App.css'
 
 function App() {
   const [todo, setTodo] = useState("");
-  // ローカルストレージから同期的に初期化（マウント前に読み込む）
+  // completedフラグを含むオブジェクトの配列に変更
   const [todos, setTodos] = useState(() => {
     try {
       const saved = localStorage.getItem('todos')
@@ -28,7 +28,7 @@ function App() {
   
   const handleAdd = () => {
     if (todo.trim() === "") return;
-    const newTodos = [...todos, todo.trim()];
+    const newTodos = [...todos, { text: todo.trim(), completed: false }];
     setTodos(newTodos);
     // 確定した値をローカルストレージに即時保存
     try {
@@ -54,6 +54,21 @@ function App() {
     }
   };
 
+  const handleToggleComplete = (index) => {
+    const newTodos = todos.map((todo, i) => {
+      if (i === index) {
+        return { ...todo, completed: !todo.completed };
+      }
+      return todo;
+    });
+    setTodos(newTodos);
+    try {
+      localStorage.setItem('todos', JSON.stringify(newTodos));
+    } catch (e) {
+      console.warn('failed to save todos to localStorage', e);
+    }
+  };
+
   return (
     <>
       <input
@@ -66,15 +81,18 @@ function App() {
       <button onClick={handleAdd}>追加</button>
 
       <ul>
-        {todos.map((t, i) => (
-          <li key={i}>
-            {t}
-            <button 
-              onClick={() => handleDelete(i)}
-              style={{ marginLeft: '10px' }}
-            >
-              削除
+        {todos.map((todo, i) => (
+          <li key={i} style={{ 
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            textDecoration: todo.completed ? 'line-through' : 'none'
+          }}>
+            <span>{todo.text}</span>
+            <button onClick={() => handleToggleComplete(i)}>
+              {todo.completed ? '未完了' : '完了'}
             </button>
+            <button onClick={() => handleDelete(i)}>削除</button>
           </li>
         ))}
       </ul>
