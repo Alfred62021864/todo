@@ -43,6 +43,17 @@ function App() {
     if (e.key === 'Enter') handleAdd();
   };
 
+  const handleDelete = (index) => {
+    const newTodos = todos.filter((_, i) => i !== index);
+    setTodos(newTodos);
+    // 削除後の値をローカルストレージに即時保存
+    try {
+      localStorage.setItem('todos', JSON.stringify(newTodos));
+    } catch (e) {
+      console.warn('failed to save todos to localStorage', e);
+    }
+  };
+
   return (
     <>
       <input
@@ -56,7 +67,15 @@ function App() {
 
       <ul>
         {todos.map((t, i) => (
-          <li key={i}>{t}</li>
+          <li key={i}>
+            {t}
+            <button 
+              onClick={() => handleDelete(i)}
+              style={{ marginLeft: '10px' }}
+            >
+              削除
+            </button>
+          </li>
         ))}
       </ul>
     </>
