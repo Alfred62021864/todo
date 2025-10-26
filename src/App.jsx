@@ -5,7 +5,6 @@ import './App.css'
 
 function App() {
   const [todo, setTodo] = useState("");
-  // completedフラグを含むオブジェクトの配列に変更
   const [todos, setTodos] = useState(() => {
     try {
       const saved = localStorage.getItem('todos')
@@ -15,7 +14,8 @@ function App() {
       return []
     }
   })
-  const [count, setCount] = useState(0)
+  const [editingIndex, setEditingIndex] = useState(-1); // 編集中のインデックスを管理
+  const [editText, setEditText] = useState(""); // 編集中のテキストを管理
 
   // todos が変わるたびに保存
   useEffect(() => {
@@ -69,6 +69,29 @@ function App() {
     }
   };
 
+  const handleEdit = (index) => {
+    setEditingIndex(index);
+    setEditText(todos[index].text);
+  };
+
+  const handleSaveEdit = (index) => {
+    if (editText.trim() === "") return;
+    const newTodos = todos.map((todo, i) => {
+      if (i === index) {
+        return { ...todo, text: editText.trim() };
+      }
+      return todo;
+    });
+    setTodos(newTodos);
+    setEditingIndex(-1); // 編集モードを終了
+    setEditText("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingIndex(-1);
+    setEditText("");
+  };
+
   return (
     <>
       <input
@@ -88,11 +111,31 @@ function App() {
             gap: '10px',
             textDecoration: todo.completed ? 'line-through' : 'none'
           }}>
-            <span>{todo.text}</span>
-            <button onClick={() => handleToggleComplete(i)}>
-              {todo.completed ? '未完了' : '完了'}
-            </button>
-            <button onClick={() => handleDelete(i)}>削除</button>
+            {editingIndex === i ? (
+              <>
+                <input
+                  type="text"
+                  value={editText}
+                  onChange={(e) => setEditText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveEdit(i);
+                    if (e.key === 'Escape') handleCancelEdit();
+                  }}
+                  autoFocus
+                />
+                <button onClick={() => handleSaveEdit(i)}>保存</button>
+                <button onClick={handleCancelEdit}>キャンセル</button>
+              </>
+            ) : (
+              <>
+                <span>{todo.text}</span>
+                <button onClick={() => handleToggleComplete(i)}>
+                  {todo.completed ? '未完了' : '完了'}
+                </button>
+                <button onClick={() => handleEdit(i)}>編集</button>
+                <button onClick={() => handleDelete(i)}>削除</button>
+              </>
+            )}
           </li>
         ))}
       </ul>
