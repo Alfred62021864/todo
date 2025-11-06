@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "/vite.svg";
 import "./App.css";
+import AddButton from "./components/AddButton.jsx";
+import TaskList from "./components/TaskList.jsx";
+
+import gear from "./assets/gear.svg";
+import logo from "./assets/logo.jpg";
 
 function App() {
   const [todo, setTodo] = useState("");
@@ -14,8 +17,6 @@ function App() {
       return [];
     }
   });
-  const [editingIndex, setEditingIndex] = useState(-1); // 編集中のインデックスを管理
-  const [editText, setEditText] = useState(""); // 編集中のテキストを管理
   const [filter, setFilter] = useState("all"); // 'all' | 'completed' | 'active'
   const inputRef = useRef(null);
   const [monthly, setMonthly] = useState("");
@@ -37,20 +38,6 @@ function App() {
       console.warn("failed to save todos to localStorage", e);
     }
   }, [todos]);
-
-  const handleAdd = () => {
-    if (todo.trim() === "") return;
-    const newTodos = [...todos, { text: todo.trim(), completed: false }];
-    setTodos(newTodos);
-    // 確定した値をローカルストレージに即時保存
-    try {
-      localStorage.setItem("todos", JSON.stringify(newTodos));
-    } catch (e) {
-      console.warn("failed to save todos to localStorage", e);
-    }
-    setTodo(""); // 入力欄をクリア
-    inputRef.current?.focus(); // フォーカスを戻す
-  };
 
   const handleMonthly = () => {
     if (monthly.trim() === "") return;
@@ -77,66 +64,20 @@ function App() {
 
   const handleKeyDown = (e) => {
     const composing = e.nativeEvent?.isComposing || e.isComposing;
-    if (e.key === "Enter" && !composing) handleAdd();
-  };
-
-  const handleDelete = (index) => {
-    const newTodos = todos.filter((_, i) => i !== index);
-    setTodos(newTodos);
-    // 削除後の値をローカルストレージに即時保存
-    try {
-      localStorage.setItem("todos", JSON.stringify(newTodos));
-    } catch (e) {
-      console.warn("failed to save todos to localStorage", e);
+    if (e.key === "Enter" && !composing) {
+      if (todo.trim() === "") return;
+      const text = todo.trim();
+      const newTodos = [...todos, { text, completed: false }];
+      setTodos(newTodos);
+      try {
+        localStorage.setItem("todos", JSON.stringify(newTodos));
+      } catch (e) {
+        console.warn("failed to save todos to localStorage", e);
+      }
+      setTodo("");
+      inputRef.current?.focus();
     }
   };
-
-  const handleToggleComplete = (index) => {
-    const newTodos = todos.map((todo, i) => {
-      if (i === index) {
-        return { ...todo, completed: !todo.completed };
-      }
-      return todo;
-    });
-    setTodos(newTodos);
-    try {
-      localStorage.setItem("todos", JSON.stringify(newTodos));
-    } catch (e) {
-      console.warn("failed to save todos to localStorage", e);
-    }
-  };
-
-  const handleEdit = (index) => {
-    setEditingIndex(index);
-    setEditText(todos[index].text);
-  };
-
-  const handleSaveEdit = (index) => {
-    if (editText.trim() === "") return;
-    const newTodos = todos.map((todo, i) => {
-      if (i === index) {
-        return { ...todo, text: editText.trim() };
-      }
-      return todo;
-    });
-    setTodos(newTodos);
-    setEditingIndex(-1); // 編集モードを終了
-    setEditText("");
-  };
-
-  const handleCancelEdit = () => {
-    setEditingIndex(-1);
-    setEditText("");
-  };
-
-  // 表示用に元のインデックスを保持した配列を作る
-  const visibleTodos = todos
-    .map((t, i) => ({ ...t, originalIndex: i }))
-    .filter((item) => {
-      if (filter === "completed") return item.completed;
-      if (filter === "active") return !item.completed;
-      return true;
-    });
 
   // 表示用に元のインデックスを保持した配列を作る
   const visibleMonthlies = monthlies
@@ -147,9 +88,27 @@ function App() {
       return true;
     });
 
+  const headerStyle = {
+    position: "fixed",
+    top: "0",
+    left: "0",
+    display: "flex",
+  };
+  const logoStyle = { height: "100%" };
+  const gearStyle = { height: "100%" };
+
   return (
     <>
-      <div style={{ marginBottom: "20px" }}>
+      <header style={headerStyle}>
+        <div className="logo">
+          <img src={logo} style={logoStyle} />
+        </div>
+        {/* <div className="setting">
+          <img src={gear} style={gearStyle} />
+        </div> */}
+      </header>
+      {/* <div className="main">main</div> */}
+      {/* <div style={{ marginBottom: "20px" }}>
         今月の目標
         <input
           ref={inputRef}
@@ -179,18 +138,7 @@ function App() {
             );
           })}
         </ul>
-      </div>
-      <div style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
-        <input
-          ref={inputRef}
-          type="text"
-          value={todo}
-          onChange={(e) => setTodo(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="やることを入力"
-        />
-        <button onClick={handleAdd}>追加</button>
-      </div>
+      </div> */}
       <div style={{ marginBottom: "12px", display: "flex", gap: "8px" }}>
         <button
           onClick={() => setFilter("all")}
@@ -211,50 +159,48 @@ function App() {
           完了
         </button>
       </div>
-      <ul>
-        {visibleTodos.map((todoObj) => {
-          const i = todoObj.originalIndex;
-          return (
-            <li
-              key={i}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                textDecoration: todoObj.completed ? "line-through" : "none",
-              }}
-            >
-              {editingIndex === i ? (
-                <>
-                  <input
-                    type="text"
-                    value={editText}
-                    onChange={(e) => setEditText(e.target.value)}
-                    onKeyDown={(e) => {
-                      const composing =
-                        e.nativeEvent?.isComposing || e.isComposing;
-                      if (e.key === "Enter" && !composing) handleSaveEdit(i);
-                      if (e.key === "Escape") handleCancelEdit();
-                    }}
-                    autoFocus
-                  />
-                  <button onClick={() => handleSaveEdit(i)}>保存</button>
-                  <button onClick={handleCancelEdit}>キャンセル</button>
-                </>
-              ) : (
-                <>
-                  <span>{todoObj.text}</span>
-                  <button onClick={() => handleToggleComplete(i)}>
-                    {todoObj.completed ? "未完了" : "完了"}
-                  </button>
-                  <button onClick={() => handleEdit(i)}>編集</button>
-                  <button onClick={() => handleDelete(i)}>削除</button>
-                </>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+      <TaskList todos={todos} setTodos={setTodos} filter={filter} />
+      <footer
+        style={{
+          width: "100%",
+          position: "fixed",
+          bottom: "0",
+          left: "0",
+          height: "100px",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <div style={{ display: "flex", gap: "8px", width: "100%" }}>
+          <input
+            ref={inputRef}
+            type="text"
+            value={todo}
+            onChange={(e) => setTodo(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="やることを入力"
+            style={{ height: "40px", width: "80%", marginLeft: "20px" }}
+          />
+          <AddButton
+            callback={() => {
+              if (todo.trim() === "") return;
+              const text = todo.trim();
+              const newTodos = [...todos, { text, completed: false }];
+              setTodos(newTodos);
+              try {
+                localStorage.setItem("todos", JSON.stringify(newTodos));
+              } catch (e) {
+                console.warn("failed to save todos to localStorage", e);
+              }
+
+              setTodo("");
+              inputRef.current?.focus();
+            }}
+            text="追加"
+          />
+        </div>
+      </footer>
     </>
   );
 }
