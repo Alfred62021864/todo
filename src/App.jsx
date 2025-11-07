@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import "./App.css";
-import AddButton from "./components/AddButton.jsx";
 import TaskList from "./components/TaskList.jsx";
+import InputArea from "./components/InputArea.jsx";
 
-import gear from "./assets/gear.svg";
 import logo from "./assets/logo.jpg";
 
 function App() {
@@ -62,23 +61,6 @@ function App() {
     }
   };
 
-  const handleKeyDown = (e) => {
-    const composing = e.nativeEvent?.isComposing || e.isComposing;
-    if (e.key === "Enter" && !composing) {
-      if (todo.trim() === "") return;
-      const text = todo.trim();
-      const newTodos = [...todos, { text, completed: false }];
-      setTodos(newTodos);
-      try {
-        localStorage.setItem("todos", JSON.stringify(newTodos));
-      } catch (e) {
-        console.warn("failed to save todos to localStorage", e);
-      }
-      setTodo("");
-      inputRef.current?.focus();
-    }
-  };
-
   // 表示用に元のインデックスを保持した配列を作る
   const visibleMonthlies = monthlies
     .map((t, i) => ({ ...t, originalIndex: i }))
@@ -103,63 +85,41 @@ function App() {
         <div className="logo">
           <img src={logo} style={logoStyle} />
         </div>
-        {/* <div className="setting">
-          <img src={gear} style={gearStyle} />
-        </div> */}
       </header>
-      {/* <div className="main">main</div> */}
-      {/* <div style={{ marginBottom: "20px" }}>
-        今月の目標
-        <input
-          ref={inputRef}
-          type="text"
-          value={monthly}
-          onChange={(e) => setMonthly(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="やることを入力"
-        />
-        <button onClick={handleMonthly}>追加</button>
-        <button onClick={handleMonthlyClear}>クリア</button>
-        <ul>
-          {visibleMonthlies.map((todoObj) => {
-            const i = todoObj.originalIndex;
-            return (
-              <li
-                key={i}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  textDecoration: todoObj.completed ? "line-through" : "none",
-                }}
-              >
-                <span>{todoObj.text}</span>
-              </li>
-            );
-          })}
-        </ul>
-      </div> */}
-      <div style={{ marginBottom: "12px", display: "flex", gap: "8px" }}>
-        <button
-          onClick={() => setFilter("all")}
-          style={{ fontWeight: filter === "all" ? "bold" : "normal" }}
-        >
-          すべて
-        </button>
-        <button
-          onClick={() => setFilter("active")}
-          style={{ fontWeight: filter === "active" ? "bold" : "normal" }}
-        >
-          未完了
-        </button>
-        <button
-          onClick={() => setFilter("completed")}
-          style={{ fontWeight: filter === "completed" ? "bold" : "normal" }}
-        >
-          完了
-        </button>
-      </div>
-      <TaskList todos={todos} setTodos={setTodos} filter={filter} />
+      <main>
+        <section>
+          <div
+            style={{
+              marginBottom: "12px",
+              display: "flex",
+              gap: "15px",
+              justifyContent: "center",
+            }}
+          >
+            <button
+              onClick={() => setFilter("all")}
+              style={{ fontWeight: filter === "all" ? "bold" : "normal" }}
+            >
+              すべて
+            </button>
+            <button
+              onClick={() => setFilter("active")}
+              style={{ fontWeight: filter === "active" ? "bold" : "normal" }}
+            >
+              未完了
+            </button>
+            <button
+              onClick={() => setFilter("completed")}
+              style={{ fontWeight: filter === "completed" ? "bold" : "normal" }}
+            >
+              完了
+            </button>
+          </div>
+        </section>
+        <section>
+          <TaskList todos={todos} setTodos={setTodos} filter={filter} />
+        </section>
+      </main>
       <footer
         style={{
           width: "100%",
@@ -172,34 +132,13 @@ function App() {
           alignItems: "center",
         }}
       >
-        <div style={{ display: "flex", gap: "8px", width: "100%" }}>
-          <input
-            ref={inputRef}
-            type="text"
-            value={todo}
-            onChange={(e) => setTodo(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="やることを入力"
-            style={{ height: "40px", width: "80%", marginLeft: "20px" }}
-          />
-          <AddButton
-            callback={() => {
-              if (todo.trim() === "") return;
-              const text = todo.trim();
-              const newTodos = [...todos, { text, completed: false }];
-              setTodos(newTodos);
-              try {
-                localStorage.setItem("todos", JSON.stringify(newTodos));
-              } catch (e) {
-                console.warn("failed to save todos to localStorage", e);
-              }
-
-              setTodo("");
-              inputRef.current?.focus();
-            }}
-            text="追加"
-          />
-        </div>
+        <InputArea
+          inputRef={inputRef}
+          setTodo={setTodo}
+          todo={todo}
+          setTodos={setTodos}
+          todos={todos}
+        />
       </footer>
     </>
   );

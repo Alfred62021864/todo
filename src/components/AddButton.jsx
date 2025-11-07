@@ -1,11 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import BaseButton from "./utility/BaseButton.jsx";
 
 function AddButton({ callback, text }) {
   return (
     <>
-      <button onClick={callback} style={{ width: "100px" }}>
-        {text}
-      </button>
+      <BaseButton callback={callback} text={text} />
     </>
   );
 }

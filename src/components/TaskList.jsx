@@ -61,6 +61,15 @@ function TaskList({ todos, setTodos, filter }) {
       return true;
     });
 
+  const commonButtonCSS = { width: "100px" };
+  const liCSS = { display: "flex", justifyContent: "flex-end", width: "100%" };
+  const buttonAreaCSS = {
+    width: "850px",
+    gap: "15px",
+    display: "flex",
+    justifyContent: "center",
+  };
+
   return (
     <>
       <div
@@ -69,53 +78,93 @@ function TaskList({ todos, setTodos, filter }) {
           height: "400px", // 高さを固定
           overflowY: "auto", // 縦方向のスクロールを有効化
           padding: "10px", // 内側の余白
-          border: "1px solid #ccc", // 境界線を追加（オプション）
+          // border: "1px solid #ccc", // 境界線を追加（オプション）
           borderRadius: "4px", // 角を丸く（オプション）
         }}
       >
         <ul>
-          {visibleTodos.map((todoObj) => {
-            const i = todoObj.originalIndex;
-            return (
-              <li
-                key={i}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  textDecoration: todoObj.completed ? "line-through" : "none",
-                }}
-              >
-                {editingIndex === i ? (
-                  <>
-                    <input
-                      type="text"
-                      value={editText}
-                      onChange={(e) => setEditText(e.target.value)}
-                      onKeyDown={(e) => {
-                        const composing =
-                          e.nativeEvent?.isComposing || e.isComposing;
-                        if (e.key === "Enter" && !composing) handleSaveEdit(i);
-                        if (e.key === "Escape") handleCancelEdit();
-                      }}
-                      autoFocus
-                    />
-                    <button onClick={() => handleSaveEdit(i)}>保存</button>
-                    <button onClick={handleCancelEdit}>キャンセル</button>
-                  </>
-                ) : (
-                  <>
-                    <span>{todoObj.text}</span>
-                    <button onClick={() => handleToggleComplete(i)}>
-                      {todoObj.completed ? "未完了" : "完了"}
-                    </button>
-                    <button onClick={() => handleEdit(i)}>編集</button>
-                    <button onClick={() => handleDelete(i)}>削除</button>
-                  </>
-                )}
-              </li>
-            );
-          })}
+          <div>
+            {visibleTodos.map((todoObj) => {
+              const i = todoObj.originalIndex;
+              return (
+                <li
+                  key={i}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    textDecoration: todoObj.completed ? "line-through" : "none",
+                    marginBottom: "10px",
+                  }}
+                >
+                  {editingIndex === i ? (
+                    <div style={liCSS}>
+                      <input
+                        style={{ width: "100%" }}
+                        type="text"
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        onKeyDown={(e) => {
+                          const composing =
+                            e.nativeEvent?.isComposing || e.isComposing;
+                          if (e.key === "Enter" && !composing)
+                            handleSaveEdit(i);
+                          if (e.key === "Escape") handleCancelEdit();
+                        }}
+                        autoFocus
+                      />
+                      <div id="buttonArea" style={buttonAreaCSS}>
+                        <button
+                          style={commonButtonCSS}
+                          onClick={() => handleSaveEdit(i)}
+                        >
+                          保存
+                        </button>
+                        <button
+                          style={commonButtonCSS}
+                          onClick={handleCancelEdit}
+                        >
+                          破棄
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={liCSS}>
+                      <div
+                        style={{
+                          width: "100%",
+                          margin: "auto 0",
+                          textAlign: "left",
+                        }}
+                      >
+                        {todoObj.text}
+                      </div>
+                      <div id="buttonArea" style={buttonAreaCSS}>
+                        <button
+                          style={commonButtonCSS}
+                          onClick={() => handleToggleComplete(i)}
+                        >
+                          {todoObj.completed ? "未完了" : "完了"}
+                        </button>
+                        <button
+                          style={commonButtonCSS}
+                          onClick={() => handleEdit(i)}
+                        >
+                          編集
+                        </button>
+                        <button
+                          style={commonButtonCSS}
+                          onClick={() => handleDelete(i)}
+                        >
+                          削除
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </div>
         </ul>
       </div>
     </>
