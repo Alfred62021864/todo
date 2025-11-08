@@ -77,7 +77,6 @@ function App() {
     display: "flex",
   };
   const logoStyle = { height: "100%" };
-  const gearStyle = { height: "100%" };
 
   return (
     <>
