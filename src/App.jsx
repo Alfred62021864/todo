@@ -16,18 +16,11 @@ function App() {
       return [];
     }
   });
+  const [tag, setTag] = useState("");
   const [filter, setFilter] = useState("all"); // 'all' | 'completed' | 'active'
+  const [filteringTag, setFilteringTag] = useState("");
   const inputRef = useRef(null);
-  const [monthly, setMonthly] = useState("");
-  const [monthlies, setMontlies] = useState(() => {
-    try {
-      const saved = localStorage.getItem("monthlies");
-      return saved ? JSON.parse(saved) : [];
-    } catch (e) {
-      console.warn("failed to parse todos from localStorage", e);
-      return [];
-    }
-  });
+  const tagRef = useRef(null);
 
   // todos が変わるたびに保存
   useEffect(() => {
@@ -37,38 +30,6 @@ function App() {
       console.warn("failed to save todos to localStorage", e);
     }
   }, [todos]);
-
-  const handleMonthly = () => {
-    if (monthly.trim() === "") return;
-    const newTodos = [...monthlies, { text: monthly.trim(), completed: false }];
-    setMontlies(newTodos);
-    // 確定した値をローカルストレージに即時保存
-    try {
-      localStorage.setItem("monthlies", JSON.stringify(newTodos));
-    } catch (e) {
-      console.warn("failed to save todos to localStorage", e);
-    }
-    setMonthly(""); // 入力欄をクリア
-    inputRef.current?.focus(); // フォーカスを戻す
-  };
-
-  const handleMonthlyClear = () => {
-    setMontlies([]);
-    try {
-      localStorage.setItem("monthlies", JSON.stringify([]));
-    } catch (e) {
-      console.warn("failed to save monthlies to localStorage", e);
-    }
-  };
-
-  // 表示用に元のインデックスを保持した配列を作る
-  const visibleMonthlies = monthlies
-    .map((t, i) => ({ ...t, originalIndex: i }))
-    .filter((item) => {
-      if (filter === "completed") return item.completed;
-      if (filter === "active") return !item.completed;
-      return true;
-    });
 
   const headerStyle = {
     position: "fixed",
@@ -86,7 +47,7 @@ function App() {
         </div>
       </header>
       <main>
-        <section>
+        <section id="filter">
           <div
             style={{
               marginBottom: "12px",
@@ -113,10 +74,22 @@ function App() {
             >
               完了
             </button>
+            <input
+              placeholder="タグを入力"
+              onChange={(e) => {
+                setFilteringTag(e.target.value);
+              }}
+              style={{ height: "40px", width: "250px", marginLeft: "20px" }}
+            />
           </div>
         </section>
         <section>
-          <TaskList todos={todos} setTodos={setTodos} filter={filter} />
+          <TaskList
+            todos={todos}
+            setTodos={setTodos}
+            filter={filter}
+            filteringTag={filteringTag}
+          />
         </section>
       </main>
       <footer
@@ -133,10 +106,13 @@ function App() {
       >
         <InputArea
           inputRef={inputRef}
+          tagRef={tagRef}
           setTodo={setTodo}
           todo={todo}
           setTodos={setTodos}
           todos={todos}
+          tag={tag}
+          setTag={setTag}
         />
       </footer>
     </>

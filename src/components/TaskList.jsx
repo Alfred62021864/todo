@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 
-function TaskList({ todos, setTodos, filter }) {
+function TaskList({ todos, setTodos, filter, filteringTag }) {
   const [editingIndex, setEditingIndex] = useState(-1); // 編集中のインデックスを管理
   const [editText, setEditText] = useState(""); // 編集中のテキストを管理
 
@@ -53,13 +53,21 @@ function TaskList({ todos, setTodos, filter }) {
     setEditText("");
   };
 
-  const visibleTodos = todos
-    .map((t, i) => ({ ...t, originalIndex: i }))
-    .filter((item) => {
-      if (filter === "completed") return item.completed;
-      if (filter === "active") return !item.completed;
-      return true;
-    });
+  const visibleTodos =
+    filteringTag == ""
+      ? todos
+          .map((t, i) => ({ ...t, originalIndex: i }))
+          .filter((item) => {
+            if (filter === "completed") return item.completed;
+            if (filter === "active") return !item.completed;
+            return true;
+          })
+      : todos
+          .map((t, i) => ({ ...t, originalIndex: i }))
+          .filter((item) => {
+            if (item.tag && item.tag == filteringTag) return true;
+            return false;
+          });
 
   const commonButtonCSS = { width: "100px" };
   const liCSS = { display: "flex", justifyContent: "flex-end", width: "100%" };
@@ -86,6 +94,8 @@ function TaskList({ todos, setTodos, filter }) {
           <div>
             {visibleTodos.map((todoObj) => {
               const i = todoObj.originalIndex;
+              const tag =
+                todoObj.tag && todoObj.tag.length ? `#${todoObj.tag}` : "";
               return (
                 <li
                   key={i}
@@ -138,6 +148,15 @@ function TaskList({ todos, setTodos, filter }) {
                         }}
                       >
                         {todoObj.text}
+                      </div>
+                      <div
+                        style={{
+                          width: "350px",
+                          margin: "auto 0",
+                          textAlign: "left",
+                        }}
+                      >
+                        {tag}
                       </div>
                       <div id="buttonArea" style={buttonAreaCSS}>
                         <button
