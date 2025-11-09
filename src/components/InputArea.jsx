@@ -9,14 +9,16 @@ function InputArea({
   todos,
   tag,
   setTag,
+  deadline,
+  setDeadline,
+  deadlineRef,
 }) {
   const handleKeyDown = (e) => {
     const composing = e.nativeEvent?.isComposing || e.isComposing;
     if (e.key === "Enter" && !composing) {
       if (todo.trim() === "") return;
       const text = todo.trim();
-      const newTodos = [...todos, { text, completed: false, tag }];
-      console.log(newTodos);
+      const newTodos = [...todos, { text, completed: false, tag, deadline }];
       setTodos(newTodos);
       try {
         localStorage.setItem("todos", JSON.stringify(newTodos));
@@ -26,6 +28,7 @@ function InputArea({
       setTodo("");
       inputRef.current?.focus();
       setTag("");
+      setDeadline("");
     }
   };
 
@@ -59,13 +62,27 @@ function InputArea({
             }}
             onKeyDown={handleKeyDown}
             placeholder="タグを入力"
-            style={{ height: "40px", width: "400px", marginLeft: "20px" }}
+            style={{ height: "40px", width: "500px", marginLeft: "20px" }}
+          />
+          <input
+            ref={deadlineRef}
+            type="text"
+            value={deadline}
+            onChange={(e) => {
+              setDeadline(e.target.value);
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder="納期を入力"
+            style={{ height: "40px", width: "250px", marginLeft: "20px" }}
           />
           <AddButton
             callback={() => {
               if (todo.trim() === "") return;
               const text = todo.trim();
-              const newTodos = [...todos, { text, completed: false, tag }];
+              const newTodos = [
+                ...todos,
+                { text, completed: false, tag, deadline },
+              ];
               setTodos(newTodos);
               try {
                 localStorage.setItem("todos", JSON.stringify(newTodos));
@@ -75,6 +92,7 @@ function InputArea({
 
               setTodo("");
               setTag("");
+              setDeadline("");
               inputRef.current?.focus();
             }}
             text="追加"

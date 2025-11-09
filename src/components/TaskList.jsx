@@ -1,9 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 
-function TaskList({ todos, setTodos, filter, filteringTag }) {
+function TaskList({
+  todos,
+  setTodos,
+  filter,
+  filteringTag,
+  filteringDeadline,
+}) {
   const [editingIndex, setEditingIndex] = useState(-1); // 編集中のインデックスを管理
   const [editText, setEditText] = useState(""); // 編集中のテキストを管理
   const [editTag, setEditTag] = useState(""); // 編集中のテキストを管理
+  const [editDeadline, setEditDeadline] = useState(""); // 編集中のテキストを管理
 
   const handleDelete = (index) => {
     const newTodos = todos.filter((_, i) => i !== index);
@@ -35,13 +42,19 @@ function TaskList({ todos, setTodos, filter, filteringTag }) {
     setEditingIndex(index);
     setEditText(todos[index].text);
     setEditTag(todos[index].tag);
+    setEditDeadline(todos[index].deadline);
   };
 
   const handleSaveEdit = (index) => {
     if (editText.trim() === "") return;
     const newTodos = todos.map((todo, i) => {
       if (i === index) {
-        return { ...todo, text: editText.trim(), tag: editTag };
+        return {
+          ...todo,
+          text: editText.trim(),
+          tag: editTag,
+          deadline: editDeadline,
+        };
       }
       return todo;
     });
@@ -49,29 +62,54 @@ function TaskList({ todos, setTodos, filter, filteringTag }) {
     setEditingIndex(-1); // 編集モードを終了
     setEditText("");
     setEditTag("");
+    setEditDeadline("");
   };
 
   const handleCancelEdit = () => {
     setEditingIndex(-1);
     setEditText("");
     setEditTag("");
+    setEditDeadline("");
   };
 
-  const visibleTodos =
-    filteringTag == ""
-      ? todos
-          .map((t, i) => ({ ...t, originalIndex: i }))
-          .filter((item) => {
-            if (filter === "completed") return item.completed;
-            if (filter === "active") return !item.completed;
-            return true;
-          })
-      : todos
-          .map((t, i) => ({ ...t, originalIndex: i }))
-          .filter((item) => {
-            if (item.tag && item.tag == filteringTag) return true;
-            return false;
-          });
+  const visibleTag = (() => {
+    const filtered = todos
+      .map((t, i) => ({ ...t, originalIndex: i }))
+      .filter((item) => item.tag && item.tag === filteringTag);
+
+    return filtered.length > 0 ? filtered : [];
+  })();
+
+  const visibleDeadline = (() => {
+    const filtered = todos
+      .map((t, i) => ({ ...t, originalIndex: i }))
+      .filter((item) => item.deadline && item.deadline === filteringDeadline);
+
+    return filtered.length > 0 ? filtered : [];
+  })();
+
+  const visibleFileter = (() => {
+    const filtered = todos
+      .map((t, i) => ({ ...t, originalIndex: i }))
+      .filter((item) => {
+        if (filter === "completed") return item.completed;
+        if (filter === "active") return !item.completed;
+        return true;
+      });
+
+    return filtered.length > 0 ? filtered : [];
+  })();
+
+  const visibleTodos = (() => {
+    if (filteringTag) {
+      return visibleTag;
+    } else if (filteringDeadline) {
+      return visibleDeadline;
+    }
+    return visibleFileter;
+  })();
+
+  console.log(visibleTodos);
 
   const commonButtonCSS = { width: "100px" };
   const liCSS = { display: "flex", justifyContent: "flex-end", width: "100%" };
@@ -133,7 +171,34 @@ function TaskList({ todos, setTodos, filter, filteringTag }) {
                         onChange={(e) => {
                           setEditTag(e.target.value);
                         }}
+                        onKeyDown={(e) => {
+                          const composing =
+                            e.nativeEvent?.isComposing || e.isComposing;
+                          if (e.key === "Enter" && !composing)
+                            handleSaveEdit(i);
+                          if (e.key === "Escape") handleCancelEdit();
+                        }}
                         placeholder="タグを入力"
+                        style={{
+                          height: "40px",
+                          width: "400px",
+                          marginLeft: "20px",
+                        }}
+                      />
+                      <input
+                        type="text"
+                        value={editDeadline}
+                        onChange={(e) => {
+                          setEditDeadline(e.target.value);
+                        }}
+                        onKeyDown={(e) => {
+                          const composing =
+                            e.nativeEvent?.isComposing || e.isComposing;
+                          if (e.key === "Enter" && !composing)
+                            handleSaveEdit(i);
+                          if (e.key === "Escape") handleCancelEdit();
+                        }}
+                        placeholder="納期を入力"
                         style={{
                           height: "40px",
                           width: "400px",
@@ -168,12 +233,21 @@ function TaskList({ todos, setTodos, filter, filteringTag }) {
                       </div>
                       <div
                         style={{
-                          width: "500px",
+                          width: "1000px",
                           margin: "auto 0",
                           textAlign: "left",
                         }}
                       >
                         {tag}
+                      </div>
+                      <div
+                        style={{
+                          width: "500px",
+                          margin: "auto 0",
+                          textAlign: "left",
+                        }}
+                      >
+                        {todoObj.deadline}
                       </div>
                       <div id="buttonArea" style={buttonAreaCSS}>
                         <button

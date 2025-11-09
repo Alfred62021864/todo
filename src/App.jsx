@@ -19,8 +19,11 @@ function App() {
   const [tag, setTag] = useState("");
   const [filter, setFilter] = useState("all"); // 'all' | 'completed' | 'active'
   const [filteringTag, setFilteringTag] = useState("");
+  const [filteringDeadline, setFilteringDeadline] = useState("");
+  const [deadline, setDeadline] = useState("");
   const inputRef = useRef(null);
   const tagRef = useRef(null);
+  const deadlineRef = useRef(null);
 
   // todos が変わるたびに保存
   useEffect(() => {
@@ -81,6 +84,13 @@ function App() {
               }}
               style={{ height: "40px", width: "250px", marginLeft: "20px" }}
             />
+            <input
+              placeholder="納期を入力"
+              onChange={(e) => {
+                setFilteringDeadline(e.target.value);
+              }}
+              style={{ height: "40px", width: "250px", marginLeft: "20px" }}
+            />
           </div>
         </section>
         <section>
@@ -89,6 +99,7 @@ function App() {
             setTodos={setTodos}
             filter={filter}
             filteringTag={filteringTag}
+            filteringDeadline={filteringDeadline}
           />
         </section>
       </main>
@@ -113,6 +124,9 @@ function App() {
           todos={todos}
           tag={tag}
           setTag={setTag}
+          deadlineRef={deadlineRef}
+          deadline={deadline}
+          setDeadline={setDeadline}
         />
       </footer>
     </>
