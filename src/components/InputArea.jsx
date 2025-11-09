@@ -59,7 +59,7 @@ function InputArea({
             }}
             onKeyDown={handleKeyDown}
             placeholder="タグを入力"
-            style={{ height: "40px", width: "350px", marginLeft: "20px" }}
+            style={{ height: "40px", width: "400px", marginLeft: "20px" }}
           />
           <AddButton
             callback={() => {

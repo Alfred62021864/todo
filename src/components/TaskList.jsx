@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 function TaskList({ todos, setTodos, filter, filteringTag }) {
   const [editingIndex, setEditingIndex] = useState(-1); // 編集中のインデックスを管理
   const [editText, setEditText] = useState(""); // 編集中のテキストを管理
+  const [editTag, setEditTag] = useState(""); // 編集中のテキストを管理
 
   const handleDelete = (index) => {
     const newTodos = todos.filter((_, i) => i !== index);
@@ -33,24 +34,27 @@ function TaskList({ todos, setTodos, filter, filteringTag }) {
   const handleEdit = (index) => {
     setEditingIndex(index);
     setEditText(todos[index].text);
+    setEditTag(todos[index].tag);
   };
 
   const handleSaveEdit = (index) => {
     if (editText.trim() === "") return;
     const newTodos = todos.map((todo, i) => {
       if (i === index) {
-        return { ...todo, text: editText.trim() };
+        return { ...todo, text: editText.trim(), tag: editTag };
       }
       return todo;
     });
     setTodos(newTodos);
     setEditingIndex(-1); // 編集モードを終了
     setEditText("");
+    setEditTag("");
   };
 
   const handleCancelEdit = () => {
     setEditingIndex(-1);
     setEditText("");
+    setEditTag("");
   };
 
   const visibleTodos =
@@ -123,6 +127,19 @@ function TaskList({ todos, setTodos, filter, filteringTag }) {
                         }}
                         autoFocus
                       />
+                      <input
+                        type="text"
+                        value={editTag}
+                        onChange={(e) => {
+                          setEditTag(e.target.value);
+                        }}
+                        placeholder="タグを入力"
+                        style={{
+                          height: "40px",
+                          width: "400px",
+                          marginLeft: "20px",
+                        }}
+                      />
                       <div id="buttonArea" style={buttonAreaCSS}>
                         <button
                           style={commonButtonCSS}
@@ -151,7 +168,7 @@ function TaskList({ todos, setTodos, filter, filteringTag }) {
                       </div>
                       <div
                         style={{
-                          width: "350px",
+                          width: "500px",
                           margin: "auto 0",
                           textAlign: "left",
                         }}
