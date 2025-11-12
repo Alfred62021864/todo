@@ -96,18 +96,7 @@ function App() {
           />
         </section>
       </main>
-      <footer
-        style={{
-          width: "100%",
-          position: "fixed",
-          bottom: "0",
-          left: "0",
-          height: "100px",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
+      <footer>
         <InputArea
           inputRef={inputRef}
           tagRef={tagRef}
