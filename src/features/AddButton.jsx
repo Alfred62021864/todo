@@ -1,4 +1,4 @@
-import BaseButton from "./utility/BaseButton.jsx";
+import BaseButton from "../components/BaseButton.jsx";
 
 function AddButton({ callback, text }) {
   return (

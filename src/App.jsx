@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import "./App.css";
-import TaskList from "./components/TaskList.jsx";
-import InputArea from "./components/InputArea.jsx";
+import TaskList from "./features/TaskList.jsx";
+import InputArea from "./features/InputArea.jsx";
 
 import logo from "./assets/logo.jpg";
 
