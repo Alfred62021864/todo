@@ -34,17 +34,11 @@ function App() {
     }
   }, [todos]);
 
-  const headerStyle = {
-    position: "fixed",
-    top: "0",
-    left: "0",
-    display: "flex",
-  };
   const logoStyle = { height: "100%" };
 
   return (
     <>
-      <header style={headerStyle}>
+      <header>
         <div className="logo">
           <img src={logo} style={logoStyle} />
         </div>
