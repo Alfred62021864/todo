@@ -1,0 +1,34 @@
+name: Deploy to Lightsail
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v6
+
+      - name: Prepare release bundle
+        run: tar --exclude=.git --exclude=log --exclude=tmp -czf /tmp/todo-release.tar.gz .
+
+      - name: Deploy on Lightsail
+        env:
+          LIGHTSAIL_HOST: ${{ vars.LIGHTSAIL_HOST }}
+          LIGHTSAIL_USER: ${{ vars.LIGHTSAIL_USER }}
+          LIGHTSAIL_SSH_KEY: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$LIGHTSAIL_HOST"
+          test -n "$LIGHTSAIL_USER"
+          test -n "$LIGHTSAIL_SSH_KEY"
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$LIGHTSAIL_SSH_KEY" > "$HOME/.ssh/id_ed25519"
+          chmod 600 "$HOME/.ssh/id_ed25519"
+          ssh-keyscan -H "$LIGHTSAIL_HOST" >> "$HOME/.ssh/known_hosts"
+          scp /tmp/todo-release.tar.gz "$LIGHTSAIL_USER@$LIGHTSAIL_HOST:/tmp/todo-release.tar.gz"
+          ssh "$LIGHTSAIL_USER@$LIGHTSAIL_HOST" 'mkdir -p ~/todo && tar -xzf /tmp/todo-release.tar.gz -C ~/todo && cd ~/todo && docker compose up -d --build --remove-orphans'

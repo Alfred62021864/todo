@@ -10,7 +10,7 @@ A small React todo app served by a Rails 8 JSON API. The production Docker image
 
 ## Local development
 
-In one terminal, from `api/`:
+From the repository root, in one terminal:
 
 ```sh
 bin/rails server
@@ -36,7 +36,15 @@ Open the Vite URL printed in the terminal. Vite proxies `/api` requests to Rails
 
 ## Deploy to a Lightsail instance
 
-Install Docker Engine and the Docker Compose plugin on the instance, then clone this repository and run these commands from `api/`:
+Install Docker Engine and the Docker Compose plugin on the instance. Add a GitHub Actions deploy key to the `ubuntu` user's `~/.ssh/authorized_keys`, then configure these repository settings:
+
+- Variable `LIGHTSAIL_HOST`: the instance's static IP or hostname
+- Variable `LIGHTSAIL_USER`: `ubuntu`
+- Secret `LIGHTSAIL_SSH_KEY`: the matching private SSH key
+
+The `Deploy to Lightsail` workflow runs on pushes to `main` and can also be started manually. The GitHub Actions runner sends the checked out code to the VM and runs `docker compose up -d --build`. The local development machine does not need SSH access to Lightsail.
+
+To deploy manually from the instance, copy the repository to the VM and run this from its root:
 
 ```sh
 docker compose up -d --build
