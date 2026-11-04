@@ -1,6 +1,8 @@
 # syntax=docker/dockerfile:1
 # check=error=true
 
+ARG RUBY_VERSION=3.3.13
+
 FROM node:22-alpine AS frontend
 WORKDIR /frontend
 COPY frontend/package.json ./package.json
@@ -15,8 +17,7 @@ RUN npm run build
 # For a containerized dev environment, see Dev Containers: https://guides.rubyonrails.org/getting_started_with_devcontainer.html
 
 # Make sure RUBY_VERSION matches the Ruby version in .ruby-version
-ARG RUBY_VERSION=3.3.13
-FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
+FROM docker.io/library/ruby:${RUBY_VERSION}-slim AS base
 
 # Rails app lives here
 WORKDIR /rails
