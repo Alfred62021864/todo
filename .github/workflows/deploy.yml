@@ -13,22 +13,26 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Prepare release bundle
-        run: tar --exclude=.git --exclude=log --exclude=tmp -czf /tmp/todo-release.tar.gz .
+        run: tar --exclude=.git --exclude=log --exclude=tmp --exclude=.env -czf /tmp/todo-release.tar.gz .
 
       - name: Deploy on Lightsail
         env:
           LIGHTSAIL_HOST: ${{ vars.LIGHTSAIL_HOST }}
           LIGHTSAIL_USER: ${{ vars.LIGHTSAIL_USER }}
           LIGHTSAIL_SSH_KEY: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
         run: |
           set -euo pipefail
           test -n "$LIGHTSAIL_HOST"
           test -n "$LIGHTSAIL_USER"
           test -n "$LIGHTSAIL_SSH_KEY"
+          test -n "$RAILS_MASTER_KEY"
           mkdir -p "$HOME/.ssh"
           chmod 700 "$HOME/.ssh"
           printf '%s\n' "$LIGHTSAIL_SSH_KEY" > "$HOME/.ssh/id_ed25519"
           chmod 600 "$HOME/.ssh/id_ed25519"
           ssh-keyscan -H "$LIGHTSAIL_HOST" >> "$HOME/.ssh/known_hosts"
           scp /tmp/todo-release.tar.gz "$LIGHTSAIL_USER@$LIGHTSAIL_HOST:/tmp/todo-release.tar.gz"
-          ssh "$LIGHTSAIL_USER@$LIGHTSAIL_HOST" 'mkdir -p ~/todo && tar -xzf /tmp/todo-release.tar.gz -C ~/todo && cd ~/todo && docker compose up -d --build --remove-orphans'
+          ssh "$LIGHTSAIL_USER@$LIGHTSAIL_HOST" 'mkdir -p "$HOME/todo" && tar -xzf /tmp/todo-release.tar.gz -C "$HOME/todo"'
+          printf 'RAILS_MASTER_KEY=%s\n' "$RAILS_MASTER_KEY" | ssh "$LIGHTSAIL_USER@$LIGHTSAIL_HOST" 'umask 077; cat > "$HOME/todo/.env"'
+          ssh "$LIGHTSAIL_USER@$LIGHTSAIL_HOST" 'cd "$HOME/todo" && docker compose up -d --build --remove-orphans'
