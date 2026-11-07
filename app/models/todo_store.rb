@@ -7,7 +7,6 @@ module TodoStore
 
   @lock = Monitor.new
   @path = ENV.fetch("TODO_DATA_PATH", Rails.root.join("tmp/todos.json").to_s)
-  @todos, @next_id = load_data
 
   def all
     @lock.synchronize { @todos.map(&:dup) }
@@ -60,4 +59,6 @@ module TodoStore
     File.write(temporary_path, JSON.generate(todos: @todos, next_id: @next_id))
     File.rename(temporary_path, @path)
   end
+
+  @todos, @next_id = load_data
 end
