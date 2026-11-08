@@ -325,3 +325,56 @@ h1 em { color: #8eaa5b; font-family: "Playfair Display", "Noto Sans JP", serif; 
   .journal-progress strong { font-size: 9px; }
   .review-card { padding: 16px 12px 8px; }
 }
+
+/* Keep forms and long goal names usable on narrow phone screens. */
+input[type="date"], textarea, select { max-width: 100%; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 2px solid #a6c979;
+  outline-offset: 2px;
+}
+
+@media (max-width: 520px) {
+  .goal-card-bottom { flex-wrap: wrap; gap: 9px; }
+  .goal-dates { width: 100%; min-width: 0; gap: 9px; }
+  .goal-dates label { min-width: 0; flex: 1; }
+  .goal-dates input { width: 100%; min-width: 0; }
+  .goal-card-bottom .text-button { margin-left: auto; }
+  .daily-progress-banner > div:nth-child(2) { min-width: 0; }
+  .daily-progress-banner > div:nth-child(2) > span { max-width: 100%; }
+  .daily-banner-track { flex: 0 0 60px; }
+}
+
+@media (max-width: 380px) {
+  .app-shell { width: calc(100% - 18px); }
+  .brand-sub, .brand-divider { display: none; }
+  .header-date { font-size: 8px; }
+  .page-heading h1 { font-size: 27px; }
+  .goal-card { padding-right: 12px; padding-left: 12px; }
+  .goal-dates { gap: 6px; }
+  .goal-dates input { font-size: 8px; }
+  .plan-card { padding-right: 10px; padding-left: 10px; }
+  .plan-card-heading { flex-wrap: wrap; }
+  .wbs-key { width: 100%; padding-left: 2px; }
+  .new-task-form { gap: 4px; padding-left: 6px; }
+  .new-task-form input[type="date"] { width: 88px; }
+  .new-task-form .button { padding: 0 6px; }
+  .task-detail-row { flex-wrap: wrap; }
+  .task-detail-row .detail-spacer { flex: 1 1 10px; }
+  .date-inline { width: 91px; }
+  .daily-progress-banner { gap: 7px; padding-right: 8px; padding-left: 8px; }
+  .daily-banner-icon { width: 27px; height: 27px; flex-basis: 27px; }
+  .daily-banner-track { flex-basis: 45px; }
+  .overview-task-date { display: none; }
+  .journal-entry { grid-template-columns: 51px minmax(0, 1fr) 31px; gap: 6px; }
+}
+
+@media (pointer: coarse) {
+  .icon-button { width: 34px; height: 34px; flex-basis: 34px; }
+  .delete-child { width: 30px; height: 30px; flex-basis: 30px; }
+  .delete-icon { width: 34px; height: 34px; flex-basis: 34px; }
+  .nav-item { min-height: 42px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
