@@ -110,7 +110,6 @@ export default function TodoApp() {
   const [filterTag, setFilterTag] = useState("");
   const [dailyDate, setDailyDate] = useState(localDateString());
   const [dailyTaskNotes, setDailyTaskNotes] = useState({});
-  const [todayTaskChoice, setTodayTaskChoice] = useState("");
   const [goalDraft, setGoalDraft] = useState(null);
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDate, setTaskDate] = useState("");
@@ -159,9 +158,9 @@ export default function TodoApp() {
   const taskTags = useMemo(() => [...new Set((workspace?.tasks || []).map((task) => task.tag?.trim()).filter(Boolean))].sort((left, right) => left.localeCompare(right, "ja")), [workspace]);
   const visibleRootTasks = rootTasks.filter((task) => !filterTag || task.tag === filterTag || (tasksByParent.get(task.id) || []).some((child) => child.tag === filterTag));
   const selectedEntry = workspace?.daily_entries.find((item) => item.date === dailyDate);
-  const selectedPlan = workspace?.daily_plans.find((item) => item.date === dailyDate) || { task_ids: [], completed_task_ids: [] };
-  const selectedPlanTasks = workspace?.tasks.filter((task) => selectedPlan.task_ids.includes(task.id)) || [];
-  const availablePlanTasks = workspace?.tasks.filter((task) => !selectedPlan.task_ids.includes(task.id)) || [];
+  const savedPlan = workspace?.daily_plans.find((item) => item.date === dailyDate) || { task_ids: [], completed_task_ids: [] };
+  const selectedPlanTasks = workspace?.tasks || [];
+  const selectedPlan = { ...savedPlan, task_ids: selectedPlanTasks.map((task) => task.id), completed_task_ids: savedPlan.completed_task_ids.filter((id) => selectedPlanTasks.some((task) => task.id === id)) };
   const daysRemaining = workspace?.goal.target_date
     ? Math.ceil((new Date(`${workspace.goal.target_date}T00:00:00`) - new Date(`${localDateString()}T00:00:00`)) / 86_400_000)
     : null;
@@ -259,22 +258,11 @@ export default function TodoApp() {
     }
   }
 
-  function addTodayTask() {
-    const taskId = Number(todayTaskChoice || availablePlanTasks[0]?.id);
-    if (!taskId) return;
-    saveTodayPlan([...selectedPlan.task_ids, taskId], selectedPlan.completed_task_ids);
-    setTodayTaskChoice("");
-  }
-
   function toggleTodayTask(task, completed) {
     const completedIds = completed
       ? [...selectedPlan.completed_task_ids, task.id]
       : selectedPlan.completed_task_ids.filter((id) => id !== task.id);
     saveTodayPlan(selectedPlan.task_ids, completedIds);
-  }
-
-  function removeTodayTask(task) {
-    saveTodayPlan(selectedPlan.task_ids.filter((id) => id !== task.id), selectedPlan.completed_task_ids.filter((id) => id !== task.id));
   }
 
   function chooseDaily(date) {
@@ -353,7 +341,7 @@ export default function TodoApp() {
 
       {view === "daily" && (
         <section className="view-content daily-view">
-          <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot" />A MOMENT FOR TODAY</div><h1>今日の一歩を、<em>記録しよう。</em></h1><p>課題を選んで、今日取り組んだことを書き留めましょう。</p></div><div className="daily-date-control"><label htmlFor="daily-date">記録する日</label><input id="daily-date" type="date" value={dailyDate} onChange={(event) => setDailyDate(event.target.value)} /></div></div>
+          <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot" />A MOMENT FOR TODAY</div><h1>今日の一歩を、<em>記録しよう。</em></h1><p>課題ごとに、今日できたこと・できなかったことを書き留めましょう。</p></div><div className="daily-date-control"><label htmlFor="daily-date">記録する日</label><input id="daily-date" type="date" value={dailyDate} onChange={(event) => setDailyDate(event.target.value)} /></div></div>
           <div className="daily-progress-banner"><span className="daily-banner-icon">✳</span><div><span>{workspace.goal.title}</span><strong>現在の達成率 <b>{workspace.progress}%</b></strong></div><div className="daily-banner-track"><span style={{ width: `${workspace.progress}%` }} /></div></div>
           <form className="surface today-plan-card" onSubmit={saveDaily}>
             <div className="section-heading"><div><div className="section-label">TODAY'S PLAN</div><h2>{dailyDate === localDateString() ? "今日やること" : "この日にやること"} <span className="entry-count">{selectedPlan.completed_task_ids.length}/{selectedPlanTasks.length}</span></h2></div></div>
@@ -361,9 +349,8 @@ export default function TodoApp() {
               const remainingDays = daysUntil(task.due_date);
               const badgeText = remainingDays === null ? null : remainingDays < 0 ? `期限超過 ${Math.abs(remainingDays)}日` : remainingDays === 0 ? "今日が期日" : `あと${remainingDays}日`;
               const note = dailyTaskNotes[task.id] || {};
-              return <div className={`today-plan-item ${selectedPlan.completed_task_ids.includes(task.id) ? "is-complete" : ""}`} key={task.id}><div className="today-plan-item-heading"><label><input type="checkbox" checked={selectedPlan.completed_task_ids.includes(task.id)} disabled={busy} onChange={(event) => toggleTodayTask(task, event.target.checked)} /><span className="today-plan-task">{task.parent_id ? "↳ " : ""}{task.title}</span></label>{badgeText && <span className={`due-badge ${remainingDays < 3 ? "is-urgent" : ""}`}>{badgeText}</span>}<button type="button" className="today-plan-remove" disabled={busy} onClick={() => removeTodayTask(task)} aria-label={`${task.title}をこの日のリストから削除`}>×</button></div><div className="daily-task-notes"><label><span className="reflection-title">できたこと</span><textarea value={note.done || ""} rows={3} maxLength={4000} placeholder="取り組めたことを書きましょう" onChange={(event) => setDailyTaskNotes((current) => ({ ...current, [task.id]: { ...current[task.id], done: event.target.value } }))} /></label><label><span className="reflection-title">できなかったこと</span><textarea value={note.not_done || ""} rows={3} maxLength={4000} placeholder="できなかったことや次にやることを書きましょう" onChange={(event) => setDailyTaskNotes((current) => ({ ...current, [task.id]: { ...current[task.id], not_done: event.target.value } }))} /></label></div></div>;
+              return <div className={`today-plan-item ${selectedPlan.completed_task_ids.includes(task.id) ? "is-complete" : ""}`} key={task.id}><div className="today-plan-item-heading"><label><input type="checkbox" checked={selectedPlan.completed_task_ids.includes(task.id)} disabled={busy} onChange={(event) => toggleTodayTask(task, event.target.checked)} /><span className="today-plan-task">{task.parent_id ? "↳ " : ""}{task.title}</span></label>{badgeText && <span className={`due-badge ${remainingDays < 3 ? "is-urgent" : ""}`}>{badgeText}</span>}</div><div className="daily-task-notes"><label><span className="reflection-title">できたこと</span><textarea value={note.done || ""} rows={3} maxLength={4000} placeholder="取り組めたことを書きましょう" onChange={(event) => setDailyTaskNotes((current) => ({ ...current, [task.id]: { ...current[task.id], done: event.target.value } }))} /></label><label><span className="reflection-title">できなかったこと</span><textarea value={note.not_done || ""} rows={3} maxLength={4000} placeholder="できなかったことや次にやることを書きましょう" onChange={(event) => setDailyTaskNotes((current) => ({ ...current, [task.id]: { ...current[task.id], not_done: event.target.value } }))} /></label></div></div>;
             })}</div>}
-            {availablePlanTasks.length > 0 && <div className="today-plan-add"><label className="sr-only" htmlFor="today-task-choice">この日にやる課題を選ぶ</label><select id="today-task-choice" value={availablePlanTasks.some((task) => String(task.id) === todayTaskChoice) ? todayTaskChoice : String(availablePlanTasks[0]?.id || "")} onChange={(event) => setTodayTaskChoice(event.target.value)}><option value="" disabled>課題を選ぶ</option>{availablePlanTasks.map((task) => <option key={task.id} value={task.id}>{task.parent_id ? "　↳ " : ""}{task.title}</option>)}</select><button type="button" className="button button-light" disabled={busy} onClick={addTodayTask}>追加 ＋</button></div>}
             {workspace.tasks.length === 0 && <div className="today-plan-empty"><p>計画に課題を追加すると、ここで今日のリストを作れます。</p><button type="button" className="button button-light" onClick={() => setView("plan")}>計画を開く</button></div>}
             {selectedPlanTasks.length > 0 && <div className="daily-form-footer"><span>課題ごとに、できたこと・できなかったことを記録できます</span><button type="submit" className="button button-dark" disabled={busy}>今日の記録を保存 <span>↗</span></button></div>}
           </form>
