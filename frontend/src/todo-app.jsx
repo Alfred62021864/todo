@@ -285,7 +285,7 @@ export default function TodoApp() {
         <a className="brand" href="#home" onClick={() => { setView("daily"); setNavExpanded(false); }}><span className="brand-mark">t</span><span>today</span><span className="brand-divider">/</span><span className="brand-sub">目標とふりかえり</span></a>
         <nav className="main-nav" aria-label="メインナビゲーション">
           {[{ id: "daily", label: "今日の記録", icon: "✎" }, { id: "plan", label: "計画", icon: "☷" }].map((item) => (
-            <button type="button" key={item.id} className={`nav-item ${view === item.id ? "active" : ""}`} aria-label={item.label} onClick={() => { setView(item.id); setNavExpanded(false); }}><span className="nav-item-icon">{item.icon}</span><span className="nav-item-label">{item.label}</span>{item.id === "daily" && <i className="nav-today-dot" />}</button>
+            <button type="button" key={item.id} className={`nav-item ${view === item.id ? "active" : ""}`} aria-label={item.label} onClick={() => { setView(item.id); setNavExpanded(false); }}><span className="nav-item-icon">{item.icon}</span><span className="nav-item-label">{item.label}</span></button>
           ))}
           <div className={`nav-extra ${navExpanded ? "is-expanded" : ""}`}>
             {[{ id: "review", label: "振り返り", icon: "↗" }, { id: "settings", label: "設定", icon: "⚙" }].map((item) => (
@@ -293,10 +293,7 @@ export default function TodoApp() {
             ))}
           </div>
           <button type="button" className="nav-more" aria-label="その他のメニュー" aria-expanded={navExpanded} onClick={() => setNavExpanded((expanded) => !expanded)}>{navExpanded ? "×" : "···"}</button>
-          <span className="nav-spacer" />
-          <span className="nav-goal-chip"><span />{workspace.goal.title}</span>
         </nav>
-        <div className="header-date"><span className="online-dot" />{formatDate(localDateString(), { year: "numeric", month: "long", day: "numeric", weekday: "short" })}</div>
       </header>
 
       {(error || notice) && <div className={`toast ${error ? "toast-error" : "toast-success"}`} role={error ? "alert" : "status"}>{error || notice}<button type="button" onClick={() => { setError(""); setNotice(""); }} aria-label="閉じる">×</button></div>}
@@ -306,7 +303,7 @@ export default function TodoApp() {
 
       {view === "overview" && (
         <section className="view-content">
-          <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot" />YOUR NORTH STAR</div><h1>大切なことを、<em>一歩ずつ。</em></h1><p>目標を小さく分けて、今日できることから進めよう。</p></div><button type="button" className="button button-dark" onClick={() => setView("daily")}>今日を記録する <span>↗</span></button></div>
+          <div className="page-toolbar"><button type="button" className="button button-dark" onClick={() => setView("daily")}>今日を記録する <span>↗</span></button></div>
 
           <form className="goal-card" onSubmit={saveGoal}>
             <div className="goal-card-top"><div className="section-label">FOCUS GOAL <span className="section-label-line" /></div><span className="goal-badge"><span>✦</span> MY GOAL</span></div>
@@ -334,7 +331,7 @@ export default function TodoApp() {
 
       {view === "plan" && (
         <section className="view-content">
-          <div className="page-heading page-heading-compact"><div><div className="eyebrow"><span className="eyebrow-dot" />BREAK IT DOWN</div><h1>目標までの<em>道すじ。</em></h1><p>大きな目標を、実行できる課題に分けてみよう。</p></div><div className="plan-progress"><span>全体の達成率</span><strong>{workspace.progress}%</strong></div></div>
+          <div className="page-toolbar"><div className="plan-progress"><span>全体の達成率</span><strong>{workspace.progress}%</strong></div></div>
           <section className="surface plan-card"><div className="plan-card-heading"><div><div className="section-label">WORK BREAKDOWN</div><h2>課題の計画 <span>{workspace.tasks.length}</span></h2><p>親課題と子課題の1階層で整理できます。</p></div></div>
             <datalist id="task-tag-suggestions">{taskTags.map((tag) => <option key={tag} value={tag} />)}</datalist>
             <form className="new-task-form" onSubmit={(event) => addTask(event)}><span className="new-task-plus">＋</span><input value={taskTitle} onChange={(event) => setTaskTitle(event.target.value)} placeholder="新しい課題を追加する" aria-label="新しい課題" maxLength={160} /><input list="task-tag-suggestions" value={taskTag} onChange={(event) => setTaskTag(event.target.value)} placeholder="タグ" aria-label="課題のタグ" maxLength={20} /><input type="date" value={taskDate} onChange={(event) => setTaskDate(event.target.value)} aria-label="課題の日付" /><button type="submit" className="button button-dark" disabled={busy || !taskTitle.trim()}>課題を追加 <span>↗</span></button></form>
@@ -355,7 +352,7 @@ export default function TodoApp() {
 
       {view === "daily" && (
         <section className="view-content daily-view">
-          <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot" />A MOMENT FOR TODAY</div><h1>今日の一歩を、<em>記録しよう。</em></h1><p>課題ごとに、今日できたこと・できなかったことを書き留めましょう。</p></div><div className="daily-date-control"><label htmlFor="daily-date">記録する日</label><input id="daily-date" type="date" value={dailyDate} onChange={(event) => setDailyDate(event.target.value)} /></div></div>
+          <div className="page-toolbar"><div className="daily-date-control"><label htmlFor="daily-date">記録する日</label><input id="daily-date" type="date" value={dailyDate} onChange={(event) => setDailyDate(event.target.value)} /></div></div>
           <form className="surface today-plan-card" onSubmit={saveDaily}>
             <div className="section-heading"><div><div className="section-label">TASKS IN GOAL PERIOD</div><h2>{dailyDate === localDateString() ? "今日やること" : "この日にやること"}</h2></div></div>
             <p className="daily-plan-hint">課題の追加・編集は「<button type="button" className="daily-plan-hint-link" onClick={() => setView("plan")}>計画</button>」タブから行えます。</p>
@@ -382,7 +379,7 @@ export default function TodoApp() {
 
       {view === "review" && (
         <section className="view-content">
-          <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot" />LOOKING BACK</div><h1>歩みを見つめて、<em>次へ。</em></h1><p>積み重ねを振り返ると、次に進むヒントが見えてくる。</p></div><button type="button" className="button button-dark" onClick={() => setView("daily")}>今日を記録する <span>↗</span></button></div>
+          <div className="page-toolbar"><button type="button" className="button button-dark" onClick={() => setView("daily")}>今日を記録する <span>↗</span></button></div>
           <section className="surface chart-card review-chart"><div className="section-heading"><div><div className="section-label">YOUR MOMENTUM</div><h2>進捗のうつりかわり</h2></div><span className="review-current">現在 <strong>{workspace.progress}%</strong></span></div><ProgressChart history={workspace.progress_history} progress={workspace.progress} /></section>
           <section className="surface review-card"><div className="section-heading"><div><div className="section-label">DAILY NOTES</div><h2>日々の振り返り <span className="entry-count">{workspace.daily_entries.length}</span></h2></div></div>
             {workspace.daily_entries.length === 0 ? <div className="plan-empty review-empty"><span className="empty-spark">✳</span><h3>まだ記録はありません</h3><p>課題を選んで、その日に取り組んだことを残しましょう。</p><button type="button" className="button button-light" onClick={() => setView("daily")}>最初の記録を書く</button></div> : <div className="journal-list">{[...workspace.daily_entries].reverse().map((entry) => <article className="journal-entry" key={entry.date}><button type="button" className="journal-date" onClick={() => chooseDaily(entry.date)}><span>{formatDate(entry.date, { month: "short", day: "numeric" })}</span><small>{formatDate(entry.date, { weekday: "short" })}</small><b>→</b></button><div className="journal-content">{entry.activities?.map((activity) => <div className="journal-activity" key={`${activity.task_id}-${activity.task_title}`}><div className="journal-activity-title"><span className="journal-label"><i className="journal-check">✓</i><TaskName>{activity.task_title}</TaskName></span></div>{activity.done || activity.content ? <p className="journal-note"><strong>できたこと</strong><span>{activity.done || activity.content}</span></p> : null}{activity.not_done ? <p className="journal-note"><strong>できなかったこと</strong><span>{activity.not_done}</span></p> : null}</div>)}{entry.activities?.length && (entry.done || entry.not_done) ? <div className="journal-legacy"><span>以前の振り返り</span><p>{entry.done}</p><p>{entry.not_done}</p></div> : null}{!entry.activities?.length && <><div className="journal-column"><span className="journal-label"><i className="journal-check">✓</i>できたこと</span><p>{entry.done || <span className="muted-copy">記録なし</span>}</p></div><div className="journal-column"><span className="journal-label"><i className="journal-reflect">↗</i>できなかったこと</span><p>{entry.not_done || <span className="muted-copy">記録なし</span>}</p></div></>}</div><div className="journal-progress"><span>進捗</span><strong>{entry.progress ?? 0}%</strong></div></article>)}</div>}
@@ -393,7 +390,6 @@ export default function TodoApp() {
 
       {view === "settings" && (
         <section className="view-content">
-          <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot" />PREFERENCES</div><h1>自分らしく、<em>整えよう。</em></h1><p>画面の見た目を選べます。</p></div></div>
           <section className="surface settings-card" aria-labelledby="appearance-title">
             <div className="section-label">APPEARANCE</div>
             <h2 id="appearance-title">テーマ</h2>

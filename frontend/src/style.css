@@ -30,8 +30,7 @@ input, textarea, select { color: inherit; }
 .brand-mark { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 50%; background: #c3ec7b; color: #384229; font: italic 17px "Playfair Display", serif; }
 .brand-divider { margin: 0 1px 0 4px; color: #d1d3c9; font-weight: 400; }
 .brand-sub { color: #8f9287; font-size: 11px; font-weight: 500; letter-spacing: .02em; }
-.header-date { display: flex; align-items: center; gap: 8px; color: #86897f; font-size: 11px; }
-.online-dot, .eyebrow-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+.eyebrow-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
 .main-nav { position: relative; display: flex; min-width: 0; align-items: center; justify-self: stretch; gap: 5px; margin: 0; padding: 5px; border: 1px solid #e8e9e1; border-radius: 7px; background: #fffefa; box-shadow: 0 4px 14px #30342006; }
 .nav-item { position: relative; display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px; border: 0; border-radius: 4px; background: transparent; color: #85887d; font-size: 11px; transition: background .16s, color .16s; }
 .nav-item-icon { color: #a3a89a; font-size: 14px; }
@@ -42,21 +41,18 @@ input, textarea, select { color: inherit; }
 .nav-extra { display: contents; }
 .nav-more { display: none; min-width: 34px; height: 32px; border: 0; border-radius: 4px; background: transparent; color: #85887d; font-size: 17px; line-height: 1; }
 .nav-more:hover { background: #f6f7f1; }
-.nav-today-dot { width: 5px; height: 5px; border-radius: 50%; background: #a8cc70; }
-.nav-spacer { flex: 1; }
-.nav-goal-chip { display: flex; align-items: center; gap: 7px; max-width: 260px; padding: 0 9px; overflow: hidden; color: #94978c; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
-.nav-goal-chip span { flex: 0 0 6px; width: 6px; height: 6px; border-radius: 50%; background: #c5e78d; }
-.view-content { padding-top: 46px; animation: arrive .28s ease-out; }
+.view-content { padding-top: 22px; animation: arrive .28s ease-out; }
+.page-toolbar { display: flex; min-height: 30px; align-items: center; justify-content: flex-end; gap: 12px; margin-bottom: 12px; }
+.page-toolbar .button { min-height: 32px; }
 @keyframes arrive { from { opacity: .5; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
 @media (max-width: 900px) {
   .topbar { grid-template-columns: auto minmax(0, 1fr); gap: 10px; }
-  .brand-divider, .brand-sub, .header-date { display: none; }
+  .brand-divider, .brand-sub { display: none; }
   .nav-extra { display: none; }
   .nav-extra.is-expanded { position: absolute; z-index: 15; top: calc(100% + 6px); right: 0; display: grid; min-width: 138px; padding: 5px; border: 1px solid #e8e9e1; border-radius: 6px; background: #fffefa; box-shadow: 0 8px 24px #30342018; }
   .nav-extra.is-expanded .nav-item { width: 100%; justify-content: flex-start; }
   .nav-more { display: inline-grid; flex: 0 0 34px; place-items: center; }
-  .nav-spacer, .nav-goal-chip { display: none; }
   html[data-theme="dark"] .nav-extra.is-expanded { border-color: #393f36; background: #262b25; }
 }
 .page-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
@@ -284,7 +280,7 @@ h1 em { color: #8eaa5b; font-family: "Playfair Display", "Noto Sans JP", serif; 
   .app-shell { width: min(100% - 28px, 600px); padding-top: 18px; }
   .main-nav { gap: 2px; padding: 4px; }
   .nav-item { gap: 6px; min-height: 34px; padding: 0 9px; font-size: 10px; }
-  .view-content { padding-top: 34px; }
+  .view-content { padding-top: 18px; }
   .page-heading { align-items: flex-start; }
   .page-heading > .button { align-self: end; white-space: nowrap; }
   .stat-grid { gap: 8px; }
@@ -305,7 +301,7 @@ h1 em { color: #8eaa5b; font-family: "Playfair Display", "Noto Sans JP", serif; 
   .main-nav > .nav-item { flex: 1; justify-content: center; gap: 4px; min-width: 0; min-height: 36px; padding: 0 3px; font-size: 9px; }
   .nav-item-icon { font-size: 13px; }
   .nav-more { min-width: 28px; height: 30px; flex-basis: 28px; }
-  .view-content { padding-top: 29px; }
+  .view-content { padding-top: 16px; }
   .page-heading { flex-direction: column; gap: 15px; margin-bottom: 20px; }
   .page-heading > .button { align-self: flex-start; }
   .page-heading h1 { font-size: 30px; letter-spacing: -1.3px; }
@@ -389,7 +385,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 @media (max-width: 380px) {
   .app-shell { width: calc(100% - 18px); }
   .brand-sub, .brand-divider { display: none; }
-  .header-date { font-size: 8px; }
   .page-heading h1 { font-size: 27px; }
   .goal-card { padding-right: 12px; padding-left: 12px; }
   .goal-dates { gap: 6px; }
@@ -437,7 +432,7 @@ html[data-theme="dark"] { color-scheme: dark; --ink: #e5e8df; --muted: #a1a89b; 
 html[data-theme="dark"] body { background: radial-gradient(#343a32 0.55px, transparent 0.55px); background-size: 9px 9px; }
 html[data-theme="dark"] .brand, html[data-theme="dark"] h1, html[data-theme="dark"] .section-heading h2, html[data-theme="dark"] .plan-card-heading h2,
 html[data-theme="dark"] .settings-card h2, html[data-theme="dark"] .confirm-dialog h2 { color: #e2e6dc; }
-html[data-theme="dark"] .brand-sub, html[data-theme="dark"] .header-date, html[data-theme="dark"] .eyebrow,
+html[data-theme="dark"] .brand-sub, html[data-theme="dark"] .eyebrow,
 html[data-theme="dark"] .page-heading p, html[data-theme="dark"] .section-label, html[data-theme="dark"] .stat-label,
 html[data-theme="dark"] .stat-foot, html[data-theme="dark"] .stat-number small, html[data-theme="dark"] .plan-card-heading p,
 html[data-theme="dark"] .plan-progress span, html[data-theme="dark"] .settings-card > p { color: #a1a89b; }
@@ -447,7 +442,7 @@ html[data-theme="dark"] .goal-card { background: linear-gradient(115deg, #262b25
 html[data-theme="dark"] .nav-item { color: #a5ab9f; }
 html[data-theme="dark"] .nav-item:hover { background: #30362e; color: #e5e8df; }
 html[data-theme="dark"] .nav-item.active { background: #353f2c; color: #c2dc94; }
-html[data-theme="dark"] .nav-goal-chip, html[data-theme="dark"] .text-button, html[data-theme="dark"] .quiet-link { color: #b0c889; }
+html[data-theme="dark"] .text-button, html[data-theme="dark"] .quiet-link { color: #b0c889; }
 html[data-theme="dark"] .goal-description-field textarea, html[data-theme="dark"] .goal-dates input,
 html[data-theme="dark"] .task-detail-row, html[data-theme="dark"] .new-task-form,
 html[data-theme="dark"] .child-task-form, html[data-theme="dark"] .daily-date-control input,
@@ -586,7 +581,7 @@ html[data-theme="dark"] .journal-activity + .journal-activity { border-color: #3
 }
 
 /* Increase the app's dense default type sizes for easier reading. */
-.brand-sub, .header-date, .nav-item, .page-heading p, .goal-description-field textarea,
+.brand-sub, .nav-item, .page-heading p, .goal-description-field textarea,
 .button, .text-button, .quiet-link, .goal-dates input, .stat-foot, .chart-empty strong,
 .overview-task-name, .inline-empty p, .plan-progress span, .plan-card-heading p,
 .new-task-form input:not([type="date"]), .tag-filter-chip, .plan-empty p,
@@ -597,7 +592,7 @@ html[data-theme="dark"] .journal-activity + .journal-activity { border-color: #3
 .theme-option-label, .activity-task-field select, .activity-note-field textarea {
   font-size: 14px;
 }
-.nav-goal-chip, .eyebrow, .section-label, .stat-label, .chart-current,
+.eyebrow, .section-label, .stat-label, .chart-current,
 .overview-task-date, .page-footer, .task-tag-filters > span,
 .wbs-meta, .task-tag-input, .detail-label, .date-inline, .daily-progress-banner > div:nth-child(2) > span,
 .reflection-hint, .daily-form-footer > span, .review-current, .journal-date small,
