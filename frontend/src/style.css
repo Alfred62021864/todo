@@ -159,7 +159,6 @@ h1 em { color: #8eaa5b; font-family: "Playfair Display", "Noto Sans JP", serif; 
 .wbs-group { position: relative; border-bottom: 1px solid #eceee6; }
 .wbs-row { display: flex; align-items: center; gap: 11px; min-height: 65px; }
 .wbs-parent { padding: 0 2px; }
-.wbs-index { width: 23px; color: #b3b7aa; font: 9px var(--mono); }
 .wbs-main { min-width: 0; flex: 1; padding: 11px 0; }
 .task-title-display { display: flex; min-width: 0; align-items: center; gap: 5px; }
 .task-title-display > strong { display: block; overflow: hidden; color: #4b5044; font-size: 10px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
@@ -322,7 +321,6 @@ h1 em { color: #8eaa5b; font-family: "Playfair Display", "Noto Sans JP", serif; 
   .new-task-form .button { min-height: 31px; gap: 5px; padding: 0 8px; font-size: 8px; }
   .wbs-row { gap: 7px; }
   .wbs-parent { min-height: 59px; }
-  .wbs-index { width: 18px; font-size: 8px; }
   .task-title-display > strong { font-size: 9px; }
   .wbs-meta { gap: 4px; font-size: 7px; }
   .wbs-percent { min-width: 29px; font-size: 8px; }
@@ -571,12 +569,13 @@ html[data-theme="dark"] .journal-activity + .journal-activity { border-color: #3
 }
 .button, .new-task-form .button, .child-task-form .button, .daily-form-footer .button { min-height: 42px; }
 .button, .new-task-form .button, .child-task-form .button, .daily-form-footer .button,
-.new-task-form input[type="date"], .wbs-index, .wbs-percent, .progress-select select,
+.new-task-form input[type="date"], .wbs-percent, .progress-select select,
 .today-activity p, .today-activity p strong, .journal-date b { font-size: 14px; }
 .nav-item { min-height: 42px; }
 .wbs-row { min-height: 72px; }
 .today-plan-item { padding-top: 15px; padding-bottom: 15px; }
 .daily-task-notes textarea, .reflection-field textarea, .activity-note-field textarea { line-height: 1.75; }
+.nav-item > span { font-size: 20px; }
 @media (max-width: 520px) {
   .new-task-form { flex-wrap: wrap; }
   .new-task-form input[aria-label="新しい課題"] { flex-basis: calc(100% - 28px); }
