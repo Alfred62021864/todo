@@ -144,7 +144,13 @@ h1 em { color: #8eaa5b; font-family: "Playfair Display", "Noto Sans JP", serif; 
 .new-task-form input[type="date"] { width: 119px; border: 0; outline: 0; background: transparent; color: #8c9183; font-size: 9px; }
 .new-task-form input[aria-label="課題のタグ"], .child-task-form input[aria-label="子課題のタグ"] { flex: 0 1 90px; border-left: 1px solid #eceee7; padding-left: 9px; }
 .new-task-form .button { min-height: 34px; }
+.task-tag-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 16px; }
+.task-tag-filters > span { margin-right: 2px; color: #9a9e91; font-size: 9px; }
+.tag-filter-chip { padding: 5px 10px; border: 1px solid #e6e9df; border-radius: 14px; background: #fffefa; color: #777d6f; font-size: 9px; transition: background .15s, border-color .15s, color .15s; }
+.tag-filter-chip:hover { border-color: #cbd7b9; color: #667d43; }
+.tag-filter-chip.active { border-color: #dbe6ca; background: #eff5e6; color: #617b3b; font-weight: 600; }
 .plan-empty { display: flex; min-height: 228px; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
+.filter-empty { min-height: 170px; }
 .empty-spark { color: #aacd77; font-size: 21px; }
 .plan-empty h3 { margin: 10px 0 0; color: #555b4d; font-size: 12px; font-weight: 600; }
 .plan-empty p { max-width: 370px; margin: 7px 0 13px; color: #9a9d92; font-size: 10px; line-height: 1.7; }
@@ -486,6 +492,10 @@ html[data-theme="dark"] .due-badge { border-color: #444c3c; background: #30382a;
 html[data-theme="dark"] .due-badge.is-urgent { border-color: #65433d; background: #3a2925; color: #f0a398; }
 html[data-theme="dark"] .today-plan-remove:hover { background: #352925; }
 html[data-theme="dark"] .today-plan-add select { border-color: #41483e; background: #20241f; color: #dce1d5; }
+html[data-theme="dark"] .task-tag-filters > span { color: #a1a89b; }
+html[data-theme="dark"] .tag-filter-chip { border-color: #41483e; background: #20241f; color: #b6bdae; }
+html[data-theme="dark"] .tag-filter-chip:hover { border-color: #586348; color: #d1e3ad; }
+html[data-theme="dark"] .tag-filter-chip.active { border-color: #536340; background: #34402b; color: #d0e5a7; }
 html[data-theme="dark"] .today-activity { border-color: #3a4038; }
 html[data-theme="dark"] .today-activity.active { border-color: #414b38; background: #2a3324; }
 html[data-theme="dark"] .activity-task-name { color: #bdd493; }
