@@ -153,7 +153,8 @@ h1 em { color: #8eaa5b; font-family: "Playfair Display", "Noto Sans JP", serif; 
 .new-task-form input[aria-label="課題のタグ"], .child-task-form input[aria-label="子課題のタグ"] { flex: 0 1 90px; border-left: 1px solid #eceee7; padding-left: 9px; }
 .new-task-form .button { min-height: 34px; }
 .task-tag-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; margin-top: 16px; }
-.task-tag-filters > span { margin-right: 2px; color: #9a9e91; font-size: 9px; }
+.task-tag-filters > span:not(.filter-separator) { display: inline-flex; min-height: 24px; align-items: center; margin-right: 2px; color: #9a9e91; font-size: 9px; line-height: 1; }
+.task-tag-filters > .filter-separator { width: 1px; height: 18px; margin: 0 5px; background: #e3e6dc; }
 .tag-filter-chip { padding: 5px 10px; border: 1px solid #e6e9df; border-radius: 14px; background: #fffefa; color: #777d6f; font-size: 9px; transition: background .15s, border-color .15s, color .15s; }
 .tag-filter-chip:hover { border-color: #cbd7b9; color: #667d43; }
 .tag-filter-chip.active { border-color: #dbe6ca; background: #eff5e6; color: #617b3b; font-weight: 600; }
@@ -190,7 +191,8 @@ h1 em { color: #8eaa5b; font-family: "Playfair Display", "Noto Sans JP", serif; 
 .wbs-percent { min-width: 33px; color: #718b4b; font: 9px var(--mono); text-align: right; }
 .icon-button { display: grid; width: 26px; height: 26px; flex: 0 0 26px; place-items: center; border: 1px solid transparent; border-radius: 3px; background: transparent; color: #a5aa9a; font-size: 16px; }
 .icon-button:hover { border-color: #e7ebdf; background: #f6f8f2; color: #708a48; }
-.delete-icon:hover, .delete-child:hover { border-color: #f0dfda; background: #fbf3f0; color: #b97669; }
+.delete-icon, .delete-child { color: #b65b4d; }
+.delete-icon:hover, .delete-child:hover { border-color: #f0d2cc; background: #fbefec; color: #9f4035; }
 .task-detail-row { display: flex; align-items: center; gap: 9px; min-height: 34px; margin: -4px 0 9px 34px; padding: 4px 10px; border-radius: 3px; background: #f8f9f5; }
 .detail-indent { display: none; }
 .detail-label { color: #a0a397; font-size: 8px; }
@@ -290,6 +292,7 @@ h1 em { color: #8eaa5b; font-family: "Playfair Display", "Noto Sans JP", serif; 
   .ring::before { width: 25px; height: 25px; }
   .stat-number { font-size: 27px; }
   .chart-card, .overview-bottom, .review-card { padding-right: 16px; padding-left: 16px; }
+  .task-tag-filters > .filter-separator { display: none; }
 }
 
 @media (max-width: 520px) {
@@ -477,6 +480,8 @@ html[data-theme="dark"] .confirm-dialog p { color: #a1a89b; }
 html[data-theme="dark"] .confirm-dialog .button-light { border-color: #41483e; background: #20241f; }
 html[data-theme="dark"] .button-light { border-color: #424b38; background: #30392a; color: #c0d69b; }
 html[data-theme="dark"] .icon-button:hover { border-color: #41483e; background: #30362e; }
+html[data-theme="dark"] .delete-icon, html[data-theme="dark"] .delete-child { color: #e08a7c; }
+html[data-theme="dark"] .delete-icon:hover, html[data-theme="dark"] .delete-child:hover { border-color: #65413b; background: #3b2b28; color: #f0a094; }
 html[data-theme="dark"] .chart-empty-mark { background: #333d2b; }
 html[data-theme="dark"] .theme-option.selected { border-color: #8da957; box-shadow: 0 0 0 2px #353f2c; }
 html[data-theme="dark"] .toast-success { border-color: #3b4432; background: #2a3324; color: #c0d69b; }
@@ -556,6 +561,7 @@ html[data-theme="dark"] .today-plan-remove:hover { background: #352925; }
 html[data-theme="dark"] .today-plan-add select { border-color: #41483e; background: #20241f; color: #dce1d5; }
 html[data-theme="dark"] .daily-task-notes textarea { border-color: #41483e; background: #20241f; color: #dce1d5; }
 html[data-theme="dark"] .task-tag-filters > span { color: #a1a89b; }
+html[data-theme="dark"] .task-tag-filters > .filter-separator { background: #41483e; }
 html[data-theme="dark"] .tag-filter-chip { border-color: #41483e; background: #20241f; color: #b6bdae; }
 html[data-theme="dark"] .tag-filter-chip:hover { border-color: #586348; color: #d1e3ad; }
 html[data-theme="dark"] .tag-filter-chip.active { border-color: #536340; background: #34402b; color: #d0e5a7; }
