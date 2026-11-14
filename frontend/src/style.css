@@ -476,7 +476,9 @@ html[data-theme="dark"] .toast-error { border-color: #59403a; background: #35292
 .activity-note-field textarea:focus { border-color: #c2d69e; box-shadow: 0 0 0 3px #f2f7e9; }
 .today-activity-list { margin-top: 14px; padding: 18px 22px 12px; }
 .today-plan-card { margin-bottom: 14px; padding: 18px 22px 16px; }
-.daily-plan-hint { margin: -14px 0 12px; color: #858a7d; font-size: 13px; }
+.daily-plan-hint { margin: 10px 0 13px; color: #858a7d; font-size: 13px; }
+.daily-plan-hint-link { padding: 0; border: 0; background: transparent; color: #718a4b; font: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.daily-plan-hint-link:hover { color: #45552f; }
 .today-plan-empty { margin: 14px 0 7px; color: #989c91; font-size: 10px; }
 .today-plan-list { margin-top: 12px; border-top: 1px solid #eff0eb; }
 .today-plan-item { display: block; padding: 11px 0; border-bottom: 1px solid #eff0eb; }
@@ -517,6 +519,7 @@ html[data-theme="dark"] .journal-legacy, html[data-theme="dark"] .journal-legacy
 html[data-theme="dark"] .activity-task-field select, html[data-theme="dark"] .activity-note-field textarea { border-color: #41483e; background: #20241f; color: #dce1d5; }
 html[data-theme="dark"] .today-plan-empty { color: #a1a89b; }
 html[data-theme="dark"] .daily-plan-hint { color: #a1a89b; }
+html[data-theme="dark"] .daily-plan-hint-link { color: #c0d69b; }
 html[data-theme="dark"] .today-plan-list, html[data-theme="dark"] .today-plan-item { border-color: #3a4038; }
 html[data-theme="dark"] .today-plan-task { color: #dce1d5; }
 html[data-theme="dark"] .today-plan-parent { color: #a1a89b; }
@@ -578,6 +581,18 @@ html[data-theme="dark"] .journal-activity + .journal-activity { border-color: #3
 .today-plan-item { padding-top: 15px; padding-bottom: 15px; }
 .daily-task-notes textarea, .reflection-field textarea, .activity-note-field textarea { line-height: 1.75; }
 .nav-item > span { font-size: 20px; }
+.tag-filter-chip[data-tag-color], .daily-task-tag, .task-tag-input[data-tag-color] {
+  border-color: hsl(var(--tag-hue), 42%, 82%);
+  background: hsl(var(--tag-hue), 55%, 96%);
+  color: hsl(var(--tag-hue), 42%, 34%);
+}
+.tag-filter-chip[data-tag-color].active { border-color: hsl(var(--tag-hue), 45%, 70%); background: hsl(var(--tag-hue), 55%, 89%); }
+html[data-theme="dark"] .tag-filter-chip[data-tag-color], html[data-theme="dark"] .daily-task-tag, html[data-theme="dark"] .task-tag-input[data-tag-color] {
+  border-color: hsl(var(--tag-hue), 28%, 40%);
+  background: hsl(var(--tag-hue), 25%, 25%);
+  color: hsl(var(--tag-hue), 55%, 82%);
+}
+html[data-theme="dark"] .tag-filter-chip[data-tag-color].active { border-color: hsl(var(--tag-hue), 35%, 50%); background: hsl(var(--tag-hue), 30%, 32%); }
 @media (max-width: 520px) {
   .new-task-form { flex-wrap: wrap; }
   .new-task-form input[aria-label="新しい課題"] { flex-basis: calc(100% - 28px); }
