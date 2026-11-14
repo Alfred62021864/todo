@@ -25,25 +25,40 @@ input, textarea, select { color: inherit; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 .app-shell { width: min(100% - 48px, 1040px); margin: 0 auto; padding: 26px 0 36px; }
-.topbar { display: flex; align-items: center; justify-content: space-between; min-height: 38px; }
+.topbar { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 16px; min-height: 38px; }
 .brand { display: inline-flex; align-items: center; gap: 9px; color: var(--ink); text-decoration: none; font-size: 17px; font-weight: 700; letter-spacing: -.6px; }
 .brand-mark { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 50%; background: #c3ec7b; color: #384229; font: italic 17px "Playfair Display", serif; }
 .brand-divider { margin: 0 1px 0 4px; color: #d1d3c9; font-weight: 400; }
 .brand-sub { color: #8f9287; font-size: 11px; font-weight: 500; letter-spacing: .02em; }
 .header-date { display: flex; align-items: center; gap: 8px; color: #86897f; font-size: 11px; }
 .online-dot, .eyebrow-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
-.main-nav { display: flex; align-items: center; gap: 5px; margin-top: 24px; padding: 7px; border: 1px solid #e8e9e1; border-radius: 7px; background: #fffefa; box-shadow: 0 4px 14px #30342006; }
+.main-nav { position: relative; display: flex; min-width: 0; align-items: center; justify-self: stretch; gap: 5px; margin: 0; padding: 5px; border: 1px solid #e8e9e1; border-radius: 7px; background: #fffefa; box-shadow: 0 4px 14px #30342006; }
 .nav-item { position: relative; display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px; border: 0; border-radius: 4px; background: transparent; color: #85887d; font-size: 11px; transition: background .16s, color .16s; }
-.nav-item > span { color: #a3a89a; font-size: 14px; }
+.nav-item-icon { color: #a3a89a; font-size: 14px; }
 .nav-item:hover { background: #f6f7f1; color: var(--ink); }
 .nav-item.active { background: #eef4e5; color: #68833d; font-weight: 600; }
-.nav-item.active > span { color: #8bab55; }
+.nav-item.active .nav-item-icon { color: #8bab55; }
+.nav-item-label { white-space: nowrap; }
+.nav-extra { display: contents; }
+.nav-more { display: none; min-width: 34px; height: 32px; border: 0; border-radius: 4px; background: transparent; color: #85887d; font-size: 17px; line-height: 1; }
+.nav-more:hover { background: #f6f7f1; }
 .nav-today-dot { width: 5px; height: 5px; border-radius: 50%; background: #a8cc70; }
 .nav-spacer { flex: 1; }
 .nav-goal-chip { display: flex; align-items: center; gap: 7px; max-width: 260px; padding: 0 9px; overflow: hidden; color: #94978c; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .nav-goal-chip span { flex: 0 0 6px; width: 6px; height: 6px; border-radius: 50%; background: #c5e78d; }
 .view-content { padding-top: 46px; animation: arrive .28s ease-out; }
 @keyframes arrive { from { opacity: .5; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 900px) {
+  .topbar { grid-template-columns: auto minmax(0, 1fr); gap: 10px; }
+  .brand-divider, .brand-sub, .header-date { display: none; }
+  .nav-extra { display: none; }
+  .nav-extra.is-expanded { position: absolute; z-index: 15; top: calc(100% + 6px); right: 0; display: grid; min-width: 138px; padding: 5px; border: 1px solid #e8e9e1; border-radius: 6px; background: #fffefa; box-shadow: 0 8px 24px #30342018; }
+  .nav-extra.is-expanded .nav-item { width: 100%; justify-content: flex-start; }
+  .nav-more { display: inline-grid; flex: 0 0 34px; place-items: center; }
+  .nav-spacer, .nav-goal-chip { display: none; }
+  html[data-theme="dark"] .nav-extra.is-expanded { border-color: #393f36; background: #262b25; }
+}
 .page-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
 .page-heading-compact { margin-bottom: 24px; }
 .eyebrow, .section-label, .stat-label, .page-footer { font-family: var(--mono); }
@@ -234,13 +249,16 @@ h1 em { color: #8eaa5b; font-family: "Playfair Display", "Noto Sans JP", serif; 
 .journal-date small { color: #9ca093; font-size: 9px; }
 .journal-date b { position: absolute; top: 2px; right: 0; color: #a8bc86; font-size: 11px; opacity: 0; transition: opacity .15s; }
 .journal-date:hover b { opacity: 1; }
-.journal-content { display: grid; grid-template-columns: 1fr 1fr; gap: 17px; min-width: 0; }
+.journal-content { display: grid; grid-template-columns: 1fr; gap: 10px; min-width: 0; }
 .journal-column { min-width: 0; }
 .journal-label { display: flex; align-items: center; gap: 6px; color: #818679; font-size: 9px; font-weight: 600; }
 .journal-label i { display: grid; width: 15px; height: 15px; place-items: center; border-radius: 50%; background: #eff4e8; color: #7f9a52; font-size: 9px; font-style: normal; }
 .journal-label .journal-reflect { background: #f4f2e9; color: #9f956f; }
 .journal-column p { display: -webkit-box; overflow: hidden; margin: 7px 0 0; color: #5f6458; font-size: 9px; line-height: 1.7; white-space: pre-wrap; -webkit-box-orient: vertical; -webkit-line-clamp: 4; }
 .journal-column .muted-copy { color: #b2b5ab; font-style: italic; }
+.journal-activity-title { margin-bottom: 5px; }
+.journal-note { margin: 5px 0 0; color: #5f6458; font-size: 9px; line-height: 1.7; white-space: pre-wrap; }
+.journal-note strong { display: block; margin-bottom: 1px; color: #818679; font-size: 8px; }
 .journal-progress { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; padding-top: 3px; color: #9ca093; font-size: 8px; }
 .journal-progress strong { color: #71894e; font: 10px var(--mono); }
 
@@ -264,9 +282,8 @@ h1 em { color: #8eaa5b; font-family: "Playfair Display", "Noto Sans JP", serif; 
 
 @media (max-width: 720px) {
   .app-shell { width: min(100% - 28px, 600px); padding-top: 18px; }
-  .main-nav { gap: 2px; margin-top: 17px; padding: 5px; }
+  .main-nav { gap: 2px; padding: 4px; }
   .nav-item { gap: 6px; min-height: 34px; padding: 0 9px; font-size: 10px; }
-  .nav-goal-chip { max-width: 110px; padding: 0 4px; font-size: 8px; }
   .view-content { padding-top: 34px; }
   .page-heading { align-items: flex-start; }
   .page-heading > .button { align-self: end; white-space: nowrap; }
@@ -283,13 +300,11 @@ h1 em { color: #8eaa5b; font-family: "Playfair Display", "Noto Sans JP", serif; 
   .app-shell { width: min(100% - 22px, 460px); padding-top: 14px; }
   .brand { gap: 6px; font-size: 15px; }
   .brand-mark { width: 24px; height: 24px; font-size: 15px; }
-  .brand-sub { font-size: 9px; }
-  .header-date { gap: 5px; font-size: 9px; }
-  .main-nav { justify-content: space-between; }
-  .nav-item { position: relative; flex: 1; flex-direction: column; gap: 2px; min-height: 48px; padding: 4px 2px; font-size: 8px; }
-  .nav-item > span { font-size: 14px; }
-  .nav-today-dot { position: absolute; top: 5px; right: calc(50% - 17px); }
-  .nav-spacer, .nav-goal-chip { display: none; }
+  .brand { flex: 0 0 auto; }
+  .main-nav { justify-content: flex-end; }
+  .main-nav > .nav-item { flex: 1; justify-content: center; gap: 4px; min-width: 0; min-height: 36px; padding: 0 3px; font-size: 9px; }
+  .nav-item-icon { font-size: 13px; }
+  .nav-more { min-width: 28px; height: 30px; flex-basis: 28px; }
   .view-content { padding-top: 29px; }
   .page-heading { flex-direction: column; gap: 15px; margin-bottom: 20px; }
   .page-heading > .button { align-self: flex-start; }
@@ -345,7 +360,7 @@ h1 em { color: #8eaa5b; font-family: "Playfair Display", "Noto Sans JP", serif; 
   .daily-form-footer .button { min-height: 35px; gap: 8px; padding: 0 10px; font-size: 9px; }
   .journal-entry { grid-template-columns: 58px minmax(0, 1fr) 35px; gap: 8px; padding: 14px 0; }
   .journal-date span { font-size: 13px; }
-  .journal-content { grid-template-columns: 1fr; gap: 10px; }
+  .journal-content { gap: 9px; }
   .journal-label { font-size: 8px; }
   .journal-column p { margin-top: 4px; font-size: 8px; -webkit-line-clamp: 3; }
   .journal-progress { font-size: 7px; }
@@ -442,6 +457,8 @@ html[data-theme="dark"] .goal-title-field input, html[data-theme="dark"] .task-t
 html[data-theme="dark"] .overview-task-name, html[data-theme="dark"] .daily-progress-banner strong,
 html[data-theme="dark"] .reflection-title, html[data-theme="dark"] .journal-date,
 html[data-theme="dark"] .journal-column p, html[data-theme="dark"] .chart-empty strong { color: #dce1d5; }
+html[data-theme="dark"] .journal-note { color: #dce1d5; }
+html[data-theme="dark"] .journal-note strong { color: #aeb5a8; }
 html[data-theme="dark"] .daily-progress-banner { border-color: #3b4432; background: linear-gradient(100deg, #2a3324, #262b25); }
 html[data-theme="dark"] .daily-banner-icon, html[data-theme="dark"] .done-icon { background: #35422b; }
 html[data-theme="dark"] .notdone-icon { background: #3b382d; }
