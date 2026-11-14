@@ -271,7 +271,7 @@ export default function TodoApp() {
       </header>
 
       <nav className="main-nav" aria-label="メインナビゲーション">
-        {[{ id: "daily", label: "今日の記録", icon: "✎" }, { id: "overview", label: "概要", icon: "◫" }, { id: "plan", label: "計画", icon: "☷" }, { id: "review", label: "振り返り", icon: "↗" }, { id: "settings", label: "設定", icon: "⚙" }].map((item) => (
+        {[{ id: "daily", label: "今日の記録", icon: "✎" }, { id: "plan", label: "計画", icon: "☷" }, { id: "review", label: "振り返り", icon: "↗" }, { id: "settings", label: "設定", icon: "⚙" }].map((item) => (
           <button type="button" key={item.id} className={`nav-item ${view === item.id ? "active" : ""}`} onClick={() => setView(item.id)}><span>{item.icon}</span>{item.label}{item.id === "daily" && <i className="nav-today-dot" />}</button>
         ))}
         <span className="nav-spacer" />
