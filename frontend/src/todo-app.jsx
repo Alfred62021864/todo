@@ -82,6 +82,7 @@ function TaskProgress({ task, onChange, disabled = false }) {
 export default function TodoApp() {
   const [workspace, setWorkspace] = useState(null);
   const [view, setView] = useState("overview");
+  const [theme, setTheme] = useState(() => window.localStorage.getItem("today-theme") === "dark" ? "dark" : "light");
   const [dailyDate, setDailyDate] = useState(localDateString());
   const [doneDraft, setDoneDraft] = useState("");
   const [notDoneDraft, setNotDoneDraft] = useState("");
@@ -105,6 +106,11 @@ export default function TodoApp() {
   useEffect(() => {
     loadWorkspace().catch(() => setError("データを読み込めませんでした。時間をおいて再読み込みしてください。"));
   }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem("today-theme", theme);
+  }, [theme]);
 
   useEffect(() => {
     const entry = workspace?.daily_entries.find((item) => item.date === dailyDate);
@@ -199,7 +205,7 @@ export default function TodoApp() {
       </header>
 
       <nav className="main-nav" aria-label="メインナビゲーション">
-        {[{ id: "overview", label: "概要", icon: "◫" }, { id: "plan", label: "計画", icon: "☷" }, { id: "daily", label: "今日の記録", icon: "✎" }, { id: "review", label: "振り返り", icon: "↗" }].map((item) => (
+        {[{ id: "overview", label: "概要", icon: "◫" }, { id: "plan", label: "計画", icon: "☷" }, { id: "daily", label: "今日の記録", icon: "✎" }, { id: "review", label: "振り返り", icon: "↗" }, { id: "settings", label: "設定", icon: "⚙" }].map((item) => (
           <button type="button" key={item.id} className={`nav-item ${view === item.id ? "active" : ""}`} onClick={() => setView(item.id)}><span>{item.icon}</span>{item.label}{item.id === "daily" && <i className="nav-today-dot" />}</button>
         ))}
         <span className="nav-spacer" />
@@ -274,6 +280,27 @@ export default function TodoApp() {
             {workspace.daily_entries.length === 0 ? <div className="plan-empty review-empty"><span className="empty-spark">✳</span><h3>まだ記録はありません</h3><p>一日の終わりに、できたこととできなかったことを残してみましょう。</p><button type="button" className="button button-light" onClick={() => setView("daily")}>最初の記録を書く</button></div> : <div className="journal-list">{[...workspace.daily_entries].reverse().map((entry) => <article className="journal-entry" key={entry.date}><button type="button" className="journal-date" onClick={() => chooseDaily(entry.date)}><span>{formatDate(entry.date, { month: "short", day: "numeric" })}</span><small>{formatDate(entry.date, { weekday: "short" })}</small><b>→</b></button><div className="journal-content"><div className="journal-column"><span className="journal-label"><i className="journal-check">✓</i>できたこと</span><p>{entry.done || <span className="muted-copy">記録なし</span>}</p></div><div className="journal-column"><span className="journal-label"><i className="journal-reflect">↗</i>できなかったこと</span><p>{entry.not_done || <span className="muted-copy">記録なし</span>}</p></div></div><div className="journal-progress"><span>進捗</span><strong>{entry.progress ?? 0}%</strong></div></article>)}</div>}
           </section>
           <footer className="page-footer"><span>NOTICE YOUR PROGRESS.</span><span>振り返りから、次の一歩へ。</span></footer>
+        </section>
+      )}
+
+      {view === "settings" && (
+        <section className="view-content">
+          <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot" />PREFERENCES</div><h1>自分らしく、<em>整えよう。</em></h1><p>画面の見た目を選べます。</p></div></div>
+          <section className="surface settings-card" aria-labelledby="appearance-title">
+            <div className="section-label">APPEARANCE</div>
+            <h2 id="appearance-title">テーマ</h2>
+            <p>アプリの表示モードを選択してください。</p>
+            <div className="theme-options" role="radiogroup" aria-label="テーマ">
+              {[{ id: "light", label: "ライト", icon: "☀" }, { id: "dark", label: "ダーク", icon: "☾" }].map((option) => (
+                <button type="button" key={option.id} role="radio" aria-checked={theme === option.id} className={`theme-option ${theme === option.id ? "selected" : ""}`} onClick={() => setTheme(option.id)}>
+                  <span className="theme-preview" data-preview={option.id}><i /><i /><i /></span>
+                  <span className="theme-option-label"><span>{option.icon}</span>{option.label}</span>
+                  <span className="theme-radio" />
+                </button>
+              ))}
+            </div>
+          </section>
+          <footer className="page-footer"><span>MAKE IT YOURS.</span><span>選択したテーマはこの端末に保存されます。</span></footer>
         </section>
       )}
     </main>
