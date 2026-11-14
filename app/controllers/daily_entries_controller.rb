@@ -14,6 +14,6 @@ class DailyEntriesController < ApplicationController
   private
 
   def daily_entry_params
-    params.require(:daily_entry).permit(:done, :not_done, activities: %i[task_id task_title content])
+    params.require(:daily_entry).permit(:done, :not_done, activities: %i[task_id task_title content done not_done])
   end
 end
