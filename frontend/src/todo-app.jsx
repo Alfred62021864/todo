@@ -160,7 +160,7 @@ export default function TodoApp() {
   const selectedEntry = workspace?.daily_entries.find((item) => item.date === dailyDate);
   const savedPlan = workspace?.daily_plans.find((item) => item.date === dailyDate) || { task_ids: [], completed_task_ids: [] };
   const taskLeaves = workspace?.tasks.filter((task) => task.parent_id || !workspace.tasks.some((child) => child.parent_id === task.id)) || [];
-  const withinGoalPeriod = (!workspace.goal.start_date || dailyDate >= workspace.goal.start_date) && (!workspace.goal.target_date || dailyDate <= workspace.goal.target_date);
+  const withinGoalPeriod = (!workspace?.goal?.start_date || dailyDate >= workspace.goal.start_date) && (!workspace?.goal?.target_date || dailyDate <= workspace.goal.target_date);
   const selectedPlanTasks = withinGoalPeriod ? taskLeaves : [];
   const selectedPlan = { ...savedPlan, task_ids: selectedPlanTasks.map((task) => task.id), completed_task_ids: savedPlan.completed_task_ids.filter((id) => selectedPlanTasks.some((task) => task.id === id)) };
   const daysRemaining = workspace?.goal.target_date
