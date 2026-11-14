@@ -548,3 +548,39 @@ html[data-theme="dark"] .journal-activity + .journal-activity { border-color: #3
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Increase the app's dense default type sizes for easier reading. */
+.brand-sub, .header-date, .nav-item, .page-heading p, .goal-description-field textarea,
+.button, .text-button, .quiet-link, .goal-dates input, .stat-foot, .chart-empty strong,
+.overview-task-name, .inline-empty p, .plan-progress span, .plan-card-heading p,
+.new-task-form input:not([type="date"]), .tag-filter-chip, .plan-empty p,
+.task-title-display > strong, .task-title-edit input, .daily-date-control input,
+.daily-progress-banner strong, .reflection-title, .reflection-field textarea,
+.daily-task-notes textarea, .today-plan-task, .today-plan-empty, .today-plan-parent,
+.activity-task-name, .activity-content, .legacy-entry, .journal-column p, .settings-card > p,
+.theme-option-label, .activity-task-field select, .activity-note-field textarea {
+  font-size: 14px;
+}
+.nav-goal-chip, .eyebrow, .section-label, .stat-label, .chart-current,
+.overview-task-date, .page-footer, .wbs-key, .task-tag-filters > span,
+.wbs-meta, .task-tag-input, .detail-label, .date-inline, .daily-progress-banner > div:nth-child(2) > span,
+.reflection-hint, .daily-form-footer > span, .review-current, .journal-date small,
+.journal-label, .journal-progress, .today-plan-parent, .due-badge, .activity-edit,
+.legacy-entry > strong, .legacy-entry p span, .journal-legacy, .loading-screen {
+  font-size: 12px;
+}
+.button, .new-task-form .button, .child-task-form .button, .daily-form-footer .button { min-height: 42px; }
+.button, .new-task-form .button, .child-task-form .button, .daily-form-footer .button,
+.new-task-form input[type="date"], .wbs-index, .wbs-percent, .progress-select select,
+.today-activity p, .today-activity p strong, .journal-date b { font-size: 14px; }
+.nav-item { min-height: 42px; }
+.wbs-row { min-height: 72px; }
+.today-plan-item { padding-top: 15px; padding-bottom: 15px; }
+.daily-task-notes textarea, .reflection-field textarea, .activity-note-field textarea { line-height: 1.75; }
+@media (max-width: 520px) {
+  .new-task-form { flex-wrap: wrap; }
+  .new-task-form input[aria-label="新しい課題"] { flex-basis: calc(100% - 28px); }
+  .new-task-form input[aria-label="課題のタグ"] { flex: 1 1 80px; }
+  .new-task-form input[type="date"] { flex: 1 1 110px; width: auto; }
+  .new-task-form .button { flex: 1 1 100%; }
+}
