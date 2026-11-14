@@ -15,7 +15,7 @@ module TodoStore
       children_by_parent = data[:tasks].group_by { |task| task[:parent_id] }
       data[:tasks].each do |task|
         children = children_by_parent[task[:id]] || []
-        task[:progress] = children.empty? ? task[:progress].to_i : average_progress(children)
+        task[:progress] = children.empty? ? task[:progress].to_i : sum_progress(children)
       end
       leaves = data[:tasks].select { |task| task[:parent_id] || children_by_parent[task[:id]].blank? }
       data[:progress] = average_progress(leaves)
@@ -209,6 +209,10 @@ module TodoStore
     return 0 if tasks.empty?
 
     (tasks.sum { |task| task[:progress].to_i } / tasks.length.to_f).round
+  end
+
+  def sum_progress(tasks)
+    [tasks.sum { |task| task[:progress].to_i }, 100].min
   end
 
   def normalize_date(value)
