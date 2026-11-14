@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Prepare release bundle
         run: tar --exclude=.git --exclude=log --exclude=tmp --exclude=.env -czf /tmp/todo-release.tar.gz .
