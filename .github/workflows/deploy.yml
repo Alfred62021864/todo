@@ -23,16 +23,21 @@ jobs:
           RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
         run: |
           set -euo pipefail
-          test -n "$LIGHTSAIL_HOST"
-          test -n "$LIGHTSAIL_USER"
-          test -n "$LIGHTSAIL_SSH_KEY"
-          test -n "$RAILS_MASTER_KEY"
+          test -n "$LIGHTSAIL_HOST" || { echo "::error::LIGHTSAIL_HOST is not configured"; exit 1; }
+          test -n "$LIGHTSAIL_USER" || { echo "::error::LIGHTSAIL_USER is not configured"; exit 1; }
+          test -n "$LIGHTSAIL_SSH_KEY" || { echo "::error::LIGHTSAIL_SSH_KEY is not configured"; exit 1; }
+          test -n "$RAILS_MASTER_KEY" || { echo "::error::RAILS_MASTER_KEY is not configured"; exit 1; }
           mkdir -p "$HOME/.ssh"
           chmod 700 "$HOME/.ssh"
           printf '%s\n' "$LIGHTSAIL_SSH_KEY" > "$HOME/.ssh/id_ed25519"
           chmod 600 "$HOME/.ssh/id_ed25519"
-          ssh-keyscan -H "$LIGHTSAIL_HOST" >> "$HOME/.ssh/known_hosts"
-          scp /tmp/todo-release.tar.gz "$LIGHTSAIL_USER@$LIGHTSAIL_HOST:/tmp/todo-release.tar.gz"
-          ssh "$LIGHTSAIL_USER@$LIGHTSAIL_HOST" 'mkdir -p "$HOME/todo" && tar -xzf /tmp/todo-release.tar.gz -C "$HOME/todo"'
-          printf 'RAILS_MASTER_KEY=%s\n' "$RAILS_MASTER_KEY" | ssh "$LIGHTSAIL_USER@$LIGHTSAIL_HOST" 'umask 077; cat > "$HOME/todo/.env"'
-          ssh "$LIGHTSAIL_USER@$LIGHTSAIL_HOST" 'cd "$HOME/todo" && docker compose up -d --build --remove-orphans'
+          echo "Checking SSH host key for $LIGHTSAIL_HOST..."
+          ssh-keyscan -T 10 -H "$LIGHTSAIL_HOST" >> "$HOME/.ssh/known_hosts" || { echo "::error::Could not read an SSH host key from $LIGHTSAIL_HOST. Check the host and allow inbound TCP port 22."; exit 1; }
+          echo "Copying release bundle to Lightsail..."
+          scp -o BatchMode=yes -o ConnectTimeout=10 /tmp/todo-release.tar.gz "$LIGHTSAIL_USER@$LIGHTSAIL_HOST:/tmp/todo-release.tar.gz" || { echo "::error::Could not copy the release bundle. Check LIGHTSAIL_SSH_KEY and SSH access for $LIGHTSAIL_USER@$LIGHTSAIL_HOST."; exit 1; }
+          echo "Extracting release bundle on Lightsail..."
+          ssh -o BatchMode=yes -o ConnectTimeout=10 "$LIGHTSAIL_USER@$LIGHTSAIL_HOST" 'mkdir -p "$HOME/todo" && tar -xzf /tmp/todo-release.tar.gz -C "$HOME/todo"' || { echo "::error::Could not extract the release bundle on Lightsail."; exit 1; }
+          echo "Updating Rails master key on Lightsail..."
+          printf 'RAILS_MASTER_KEY=%s\n' "$RAILS_MASTER_KEY" | ssh -o BatchMode=yes -o ConnectTimeout=10 "$LIGHTSAIL_USER@$LIGHTSAIL_HOST" 'umask 077; cat > "$HOME/todo/.env"' || { echo "::error::Could not update the Rails environment file on Lightsail."; exit 1; }
+          echo "Building and restarting the application on Lightsail..."
+          ssh -o BatchMode=yes -o ConnectTimeout=10 "$LIGHTSAIL_USER@$LIGHTSAIL_HOST" 'cd "$HOME/todo" && docker compose up -d --build --remove-orphans' || { echo "::error::Remote Docker Compose deploy failed. See the preceding build or Compose output."; exit 1; }
