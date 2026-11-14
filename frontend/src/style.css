@@ -442,6 +442,41 @@ html[data-theme="dark"] .theme-option.selected { border-color: #8da957; box-shad
 html[data-theme="dark"] .toast-success { border-color: #3b4432; background: #2a3324; color: #c0d69b; }
 html[data-theme="dark"] .toast-error { border-color: #59403a; background: #352925; color: #e0a89b; }
 
+.activity-task-field { display: flex; max-width: 520px; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.activity-task-field select { width: 100%; padding: 10px 12px; border: 1px solid #e7e9e1; border-radius: 3px; background: #fff; color: #51564a; font-size: 11px; }
+.activity-note-field { display: flex; flex-direction: column; align-items: flex-start; }
+.activity-note-field .reflection-icon { margin-bottom: 9px; }
+.activity-note-field textarea { width: 100%; min-height: 140px; margin-top: 12px; padding: 12px; resize: vertical; border: 1px solid #e9ebe3; border-radius: 3px; outline: 0; background: #fff; color: #4b5045; font-size: 10px; line-height: 1.75; }
+.activity-note-field textarea:focus { border-color: #c2d69e; box-shadow: 0 0 0 3px #f2f7e9; }
+.today-activity-list { margin-top: 14px; padding: 18px 22px 12px; }
+.today-activity { display: grid; width: 100%; grid-template-columns: minmax(120px, .7fr) minmax(0, 2fr) auto; align-items: start; gap: 12px; margin-top: 10px; padding: 12px 10px; border: 1px solid transparent; border-top: 1px solid #eff0eb; background: transparent; color: inherit; text-align: left; }
+.today-activity.active { border-color: #e3ead7; border-radius: 3px; background: #f8faf4; }
+.activity-task-name { color: #6b8245; font-size: 10px; font-weight: 600; }
+.activity-content { color: #686d61; font-size: 10px; line-height: 1.65; white-space: pre-wrap; }
+.activity-edit { color: #9aa18e; font-size: 9px; white-space: nowrap; }
+.legacy-entry { margin-top: 14px; padding: 17px 20px; color: #777d70; font-size: 10px; }
+.legacy-entry > strong { color: #898f80; font-size: 9px; }
+.legacy-entry p { margin: 10px 0 0; line-height: 1.7; white-space: pre-wrap; }
+.legacy-entry p span { display: block; margin-bottom: 3px; color: #9ba091; font-size: 8px; }
+.journal-activity { min-width: 0; }
+.journal-activity + .journal-activity { margin-top: 10px; padding-top: 9px; border-top: 1px solid #eff0eb; }
+.journal-legacy { margin-top: 9px; padding-top: 8px; border-top: 1px solid #eff0eb; color: #858a7d; font-size: 8px; }
+.journal-legacy p { margin: 5px 0 0; white-space: pre-wrap; }
+html[data-theme="dark"] .journal-legacy, html[data-theme="dark"] .journal-legacy p { border-color: #3a4038; color: #aeb5a8; }
+html[data-theme="dark"] .activity-task-field select, html[data-theme="dark"] .activity-note-field textarea { border-color: #41483e; background: #20241f; color: #dce1d5; }
+html[data-theme="dark"] .today-activity { border-color: #3a4038; }
+html[data-theme="dark"] .today-activity.active { border-color: #414b38; background: #2a3324; }
+html[data-theme="dark"] .activity-task-name { color: #bdd493; }
+html[data-theme="dark"] .activity-content, html[data-theme="dark"] .legacy-entry { color: #c4cabe; }
+html[data-theme="dark"] .legacy-entry { border-color: #393f36; background: #262b25; }
+html[data-theme="dark"] .journal-activity + .journal-activity { border-color: #3a4038; }
+@media (max-width: 520px) {
+  .today-activity-list { padding: 15px 12px 10px; }
+  .today-activity { grid-template-columns: minmax(0, 1fr) auto; gap: 5px 10px; padding: 10px 5px; }
+  .activity-content { grid-row: 2; grid-column: 1 / -1; }
+  .activity-edit { grid-row: 1; grid-column: 2; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }

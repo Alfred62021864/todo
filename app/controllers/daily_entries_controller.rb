@@ -3,7 +3,8 @@ class DailyEntriesController < ApplicationController
     entry = TodoStore.save_daily_entry(
       params[:date],
       done: daily_entry_params[:done],
-      not_done: daily_entry_params[:not_done]
+      not_done: daily_entry_params[:not_done],
+      activities: daily_entry_params[:activities]
     )
     render json: entry
   rescue ArgumentError => error
@@ -13,6 +14,6 @@ class DailyEntriesController < ApplicationController
   private
 
   def daily_entry_params
-    params.require(:daily_entry).permit(:done, :not_done)
+    params.require(:daily_entry).permit(:done, :not_done, activities: %i[task_id task_title content])
   end
 end

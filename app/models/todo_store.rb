@@ -88,10 +88,16 @@ module TodoStore
     end
   end
 
-  def save_daily_entry(date, done:, not_done:)
+  def save_daily_entry(date, done: nil, not_done: nil, activities: nil)
     @lock.synchronize do
       date_key = Date.iso8601(date.to_s).iso8601
-      entry = { date: date_key, done: done.to_s.strip, not_done: not_done.to_s.strip }
+      previous = @state[:daily_entries].find { |item| item[:date] == date_key } || {}
+      entry = {
+        date: date_key,
+        done: done.nil? ? previous[:done].to_s : done.to_s.strip,
+        not_done: not_done.nil? ? previous[:not_done].to_s : not_done.to_s.strip,
+        activities: activities.nil? ? (previous[:activities] || []) : normalize_activities(activities)
+      }
       @state[:daily_entries].reject! { |item| item[:date] == date_key }
       @state[:daily_entries] << entry
       @state[:daily_entries].sort_by! { |item| item[:date] }
@@ -190,6 +196,22 @@ module TodoStore
     raise ArgumentError, "タグは20文字以内で入力してください" if clean_tag.length > 20
 
     clean_tag.presence
+  end
+
+  def normalize_activities(activities)
+    Array(activities).filter_map do |activity|
+      attributes = activity.to_h.symbolize_keys
+      content = attributes[:content].to_s.strip
+      next if content.blank?
+
+      task_id = attributes[:task_id].presence&.to_i
+      task = task_id && @state[:tasks].find { |item| item[:id] == task_id }
+      task_title = task&.dig(:title) || attributes[:task_title].to_s.strip
+      raise ArgumentError, "課題を選択してください" if task_title.blank?
+      raise ArgumentError, "記録は4000文字以内で入力してください" if content.length > 4000
+
+      { task_id: task_id, task_title: task_title, content: content }
+    end
   end
 
   def deep_copy(value)

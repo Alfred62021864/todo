@@ -81,11 +81,11 @@ function TaskProgress({ task, onChange, disabled = false }) {
 
 export default function TodoApp() {
   const [workspace, setWorkspace] = useState(null);
-  const [view, setView] = useState("overview");
+  const [view, setView] = useState("daily");
   const [theme, setTheme] = useState(() => window.localStorage.getItem("today-theme") === "dark" ? "dark" : "light");
   const [dailyDate, setDailyDate] = useState(localDateString());
-  const [doneDraft, setDoneDraft] = useState("");
-  const [notDoneDraft, setNotDoneDraft] = useState("");
+  const [activityTaskId, setActivityTaskId] = useState("");
+  const [activityDraft, setActivityDraft] = useState("");
   const [goalDraft, setGoalDraft] = useState(null);
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDate, setTaskDate] = useState("");
@@ -114,8 +114,10 @@ export default function TodoApp() {
 
   useEffect(() => {
     const entry = workspace?.daily_entries.find((item) => item.date === dailyDate);
-    setDoneDraft(entry?.done || "");
-    setNotDoneDraft(entry?.not_done || "");
+    const selectedActivity = entry?.activities?.find((item) => String(item.task_id) === activityTaskId) || entry?.activities?.[0];
+    const taskId = selectedActivity?.task_id ?? workspace?.tasks.find((item) => String(item.id) === activityTaskId)?.id ?? workspace?.tasks[0]?.id ?? "";
+    setActivityTaskId(taskId === "" ? "" : String(taskId));
+    setActivityDraft(selectedActivity?.content || "");
   }, [workspace, dailyDate]);
 
   const rootTasks = useMemo(() => workspace?.tasks.filter((task) => !task.parent_id) || [], [workspace]);
@@ -184,10 +186,26 @@ export default function TodoApp() {
 
   async function saveDaily(event) {
     event.preventDefault();
+    if (!activityTaskId || !activityDraft.trim()) {
+      setError("課題を選び、今日行ったことを入力してください。");
+      return;
+    }
+    const task = workspace.tasks.find((item) => String(item.id) === activityTaskId);
+    const activities = [...(selectedEntry?.activities || [])];
+    const activity = { task_id: Number(activityTaskId), task_title: task?.title || "", content: activityDraft.trim() };
+    const existingIndex = activities.findIndex((item) => String(item.task_id) === activityTaskId);
+    if (existingIndex >= 0) activities[existingIndex] = activity;
+    else activities.push(activity);
     await refreshAfter(() => request(`/api/daily_entries/${dailyDate}`, {
       method: "PUT",
-      body: JSON.stringify({ daily_entry: { done: doneDraft, not_done: notDoneDraft } }),
-    }), "今日の振り返りを保存しました。");
+      body: JSON.stringify({ daily_entry: { activities } }),
+    }), "課題の記録を保存しました。");
+  }
+
+  function selectActivityTask(taskId) {
+    setActivityTaskId(taskId);
+    const activity = selectedEntry?.activities?.find((item) => String(item.task_id) === taskId);
+    setActivityDraft(activity?.content || "");
   }
 
   function chooseDaily(date) {
@@ -200,12 +218,12 @@ export default function TodoApp() {
   return (
     <main className="app-shell">
       <header className="topbar">
-        <a className="brand" href="#home" onClick={() => setView("overview")}><span className="brand-mark">t</span><span>today</span><span className="brand-divider">/</span><span className="brand-sub">目標とふりかえり</span></a>
+        <a className="brand" href="#home" onClick={() => setView("daily")}><span className="brand-mark">t</span><span>today</span><span className="brand-divider">/</span><span className="brand-sub">目標とふりかえり</span></a>
         <div className="header-date"><span className="online-dot" />{formatDate(localDateString(), { year: "numeric", month: "long", day: "numeric", weekday: "short" })}</div>
       </header>
 
       <nav className="main-nav" aria-label="メインナビゲーション">
-        {[{ id: "overview", label: "概要", icon: "◫" }, { id: "plan", label: "計画", icon: "☷" }, { id: "daily", label: "今日の記録", icon: "✎" }, { id: "review", label: "振り返り", icon: "↗" }, { id: "settings", label: "設定", icon: "⚙" }].map((item) => (
+        {[{ id: "daily", label: "今日の記録", icon: "✎" }, { id: "overview", label: "概要", icon: "◫" }, { id: "plan", label: "計画", icon: "☷" }, { id: "review", label: "振り返り", icon: "↗" }, { id: "settings", label: "設定", icon: "⚙" }].map((item) => (
           <button type="button" key={item.id} className={`nav-item ${view === item.id ? "active" : ""}`} onClick={() => setView(item.id)}><span>{item.icon}</span>{item.label}{item.id === "daily" && <i className="nav-today-dot" />}</button>
         ))}
         <span className="nav-spacer" />
@@ -262,13 +280,18 @@ export default function TodoApp() {
 
       {view === "daily" && (
         <section className="view-content daily-view">
-          <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot" />A MOMENT FOR TODAY</div><h1>今日の自分を、<em>記録しよう。</em></h1><p>できたことも、できなかったことも。次の一歩のヒントになります。</p></div><div className="daily-date-control"><label htmlFor="daily-date">記録する日</label><input id="daily-date" type="date" value={dailyDate} onChange={(event) => setDailyDate(event.target.value)} /></div></div>
+          <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot" />A MOMENT FOR TODAY</div><h1>今日の一歩を、<em>記録しよう。</em></h1><p>課題を選んで、今日取り組んだことを書き留めましょう。</p></div><div className="daily-date-control"><label htmlFor="daily-date">記録する日</label><input id="daily-date" type="date" value={dailyDate} onChange={(event) => setDailyDate(event.target.value)} /></div></div>
           <div className="daily-progress-banner"><span className="daily-banner-icon">✳</span><div><span>{workspace.goal.title}</span><strong>現在の達成率 <b>{workspace.progress}%</b></strong></div><div className="daily-banner-track"><span style={{ width: `${workspace.progress}%` }} /></div></div>
           <form className="daily-form surface" onSubmit={saveDaily}>
-            <div className="reflection-grid"><label className="reflection-field"><span className="reflection-icon done-icon">✓</span><span className="reflection-title">今日できたこと</span><span className="reflection-hint">小さなことも書き留めておこう。</span><textarea value={doneDraft} onChange={(event) => setDoneDraft(event.target.value)} placeholder="例：資料の構成を決めた。30分集中できた。" rows={7} maxLength={4000} /></label><label className="reflection-field"><span className="reflection-icon notdone-icon">↗</span><span className="reflection-title">今日できなかったこと</span><span className="reflection-hint">責めずに、明日のヒントにしよう。</span><textarea value={notDoneDraft} onChange={(event) => setNotDoneDraft(event.target.value)} placeholder="例：調査が終わらなかった。時間が足りなかった。" rows={7} maxLength={4000} /></label></div>
-            <div className="daily-form-footer"><span>{selectedEntry ? "この日の記録を編集しています" : "保存すると、この日の進捗がグラフに記録されます"}</span><button type="submit" className="button button-dark" disabled={busy}>振り返りを保存 <span>↗</span></button></div>
+            {workspace.tasks.length === 0 ? <div className="plan-empty"><span className="empty-spark">✳</span><h3>記録する課題を追加しましょう</h3><p>計画で課題を作ると、課題ごとの今日の記録を残せます。</p><button type="button" className="button button-light" onClick={() => setView("plan")}>計画を開く</button></div> : <>
+              <label className="activity-task-field"><span className="reflection-title">記録する課題</span><select value={activityTaskId} onChange={(event) => selectActivityTask(event.target.value)} aria-label="記録する課題">{workspace.tasks.map((task) => <option key={task.id} value={task.id}>{task.parent_id ? "　↳ " : ""}{task.title}</option>)}</select></label>
+              <label className="activity-note-field"><span className="reflection-icon done-icon">✎</span><span className="reflection-title">今日行ったこと</span><span className="reflection-hint">進めた内容や気づきを書き留めましょう。</span><textarea value={activityDraft} onChange={(event) => setActivityDraft(event.target.value)} placeholder="例：資料の構成を決め、参考資料を3件確認した。" rows={6} maxLength={4000} /></label>
+              <div className="daily-form-footer"><span>{selectedEntry?.activities?.some((item) => String(item.task_id) === activityTaskId) ? "この課題の記録を編集中" : "課題ごとに1日1件の記録を保存できます"}</span><button type="submit" className="button button-dark" disabled={busy || !activityTaskId || !activityDraft.trim()}>この課題の記録を保存 <span>↗</span></button></div>
+            </>}
           </form>
-          <div className="gentle-note"><span>✦</span> 完璧じゃなくていい。続けることが、前に進むこと。</div>
+          {selectedEntry?.activities?.length > 0 && <section className="surface today-activity-list"><div className="section-heading"><div><div className="section-label">TODAY'S WORK</div><h2>この日の記録 <span className="entry-count">{selectedEntry.activities.length}</span></h2></div></div>{selectedEntry.activities.map((activity) => <button type="button" className={`today-activity ${String(activity.task_id) === activityTaskId ? "active" : ""}`} key={`${activity.task_id}-${activity.task_title}`} onClick={() => selectActivityTask(String(activity.task_id))}><span className="activity-task-name">{activity.task_title}</span><span className="activity-content">{activity.content}</span><span className="activity-edit">編集 →</span></button>)}</section>}
+          {selectedEntry?.done || selectedEntry?.not_done ? <section className="surface legacy-entry"><strong>以前の振り返り</strong>{selectedEntry.done && <p><span>できたこと</span>{selectedEntry.done}</p>}{selectedEntry.not_done && <p><span>できなかったこと</span>{selectedEntry.not_done}</p>}</section> : null}
+          <div className="gentle-note"><span>✦</span> 小さな一歩も、確かな前進です。</div>
         </section>
       )}
 
@@ -277,7 +300,7 @@ export default function TodoApp() {
           <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot" />LOOKING BACK</div><h1>歩みを見つめて、<em>次へ。</em></h1><p>積み重ねを振り返ると、次に進むヒントが見えてくる。</p></div><button type="button" className="button button-dark" onClick={() => setView("daily")}>今日を記録する <span>↗</span></button></div>
           <section className="surface chart-card review-chart"><div className="section-heading"><div><div className="section-label">YOUR MOMENTUM</div><h2>進捗のうつりかわり</h2></div><span className="review-current">現在 <strong>{workspace.progress}%</strong></span></div><ProgressChart history={workspace.progress_history} progress={workspace.progress} /></section>
           <section className="surface review-card"><div className="section-heading"><div><div className="section-label">DAILY NOTES</div><h2>日々の振り返り <span className="entry-count">{workspace.daily_entries.length}</span></h2></div></div>
-            {workspace.daily_entries.length === 0 ? <div className="plan-empty review-empty"><span className="empty-spark">✳</span><h3>まだ記録はありません</h3><p>一日の終わりに、できたこととできなかったことを残してみましょう。</p><button type="button" className="button button-light" onClick={() => setView("daily")}>最初の記録を書く</button></div> : <div className="journal-list">{[...workspace.daily_entries].reverse().map((entry) => <article className="journal-entry" key={entry.date}><button type="button" className="journal-date" onClick={() => chooseDaily(entry.date)}><span>{formatDate(entry.date, { month: "short", day: "numeric" })}</span><small>{formatDate(entry.date, { weekday: "short" })}</small><b>→</b></button><div className="journal-content"><div className="journal-column"><span className="journal-label"><i className="journal-check">✓</i>できたこと</span><p>{entry.done || <span className="muted-copy">記録なし</span>}</p></div><div className="journal-column"><span className="journal-label"><i className="journal-reflect">↗</i>できなかったこと</span><p>{entry.not_done || <span className="muted-copy">記録なし</span>}</p></div></div><div className="journal-progress"><span>進捗</span><strong>{entry.progress ?? 0}%</strong></div></article>)}</div>}
+            {workspace.daily_entries.length === 0 ? <div className="plan-empty review-empty"><span className="empty-spark">✳</span><h3>まだ記録はありません</h3><p>課題を選んで、その日に取り組んだことを残しましょう。</p><button type="button" className="button button-light" onClick={() => setView("daily")}>最初の記録を書く</button></div> : <div className="journal-list">{[...workspace.daily_entries].reverse().map((entry) => <article className="journal-entry" key={entry.date}><button type="button" className="journal-date" onClick={() => chooseDaily(entry.date)}><span>{formatDate(entry.date, { month: "short", day: "numeric" })}</span><small>{formatDate(entry.date, { weekday: "short" })}</small><b>→</b></button><div className="journal-content">{entry.activities?.map((activity) => <div className="journal-activity" key={`${activity.task_id}-${activity.task_title}`}><span className="journal-label"><i className="journal-check">✓</i>{activity.task_title}</span><p>{activity.content}</p></div>)}{entry.activities?.length && (entry.done || entry.not_done) ? <div className="journal-legacy"><span>以前の振り返り</span><p>{entry.done}</p><p>{entry.not_done}</p></div> : null}{!entry.activities?.length && <><div className="journal-column"><span className="journal-label"><i className="journal-check">✓</i>できたこと</span><p>{entry.done || <span className="muted-copy">記録なし</span>}</p></div><div className="journal-column"><span className="journal-label"><i className="journal-reflect">↗</i>できなかったこと</span><p>{entry.not_done || <span className="muted-copy">記録なし</span>}</p></div></>}</div><div className="journal-progress"><span>進捗</span><strong>{entry.progress ?? 0}%</strong></div></article>)}</div>}
           </section>
           <footer className="page-footer"><span>NOTICE YOUR PROGRESS.</span><span>振り返りから、次の一歩へ。</span></footer>
         </section>
