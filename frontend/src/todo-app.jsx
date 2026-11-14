@@ -84,24 +84,44 @@ function TaskProgress({ task, onChange, disabled = false }) {
   );
 }
 
+function EditableTaskTitle({ task, onSave, disabled = false }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(task.title);
+
+  async function save(event) {
+    event.preventDefault();
+    const title = draft.trim();
+    if (!title) return;
+    const saved = await onSave(task, { title });
+    if (saved) setEditing(false);
+  }
+
+  if (editing) {
+    return <form className="task-title-edit" onSubmit={save}><input autoFocus aria-label={`${task.title}の課題名`} value={draft} maxLength={160} required onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === "Escape") { setDraft(task.title); setEditing(false); } }} /><button type="submit" disabled={disabled || !draft.trim()} aria-label="課題名を保存">✓</button><button type="button" disabled={disabled} onClick={() => { setDraft(task.title); setEditing(false); }} aria-label="編集をキャンセル">×</button></form>;
+  }
+
+  return <div className="task-title-display"><strong>{task.title}</strong><button type="button" className="task-title-edit-button" disabled={disabled} onClick={() => { setDraft(task.title); setEditing(true); }} aria-label={`${task.title}を編集`} title="課題名を編集">✎</button></div>;
+}
+
 export default function TodoApp() {
   const [workspace, setWorkspace] = useState(null);
   const [view, setView] = useState("daily");
   const [theme, setTheme] = useState(() => window.localStorage.getItem("today-theme") === "dark" ? "dark" : "light");
   const [filterTag, setFilterTag] = useState("");
   const [dailyDate, setDailyDate] = useState(localDateString());
-  const [activityTaskId, setActivityTaskId] = useState("");
-  const [activityDraft, setActivityDraft] = useState("");
+  const [dailyTaskNotes, setDailyTaskNotes] = useState({});
   const [todayTaskChoice, setTodayTaskChoice] = useState("");
   const [goalDraft, setGoalDraft] = useState(null);
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDate, setTaskDate] = useState("");
   const [taskTag, setTaskTag] = useState("");
+  const [childTag, setChildTag] = useState("");
   const [childParent, setChildParent] = useState(null);
   const [childTitle, setChildTitle] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [taskToDelete, setTaskToDelete] = useState(null);
 
   async function loadWorkspace() {
     const data = await request("/api/workspace");
@@ -121,11 +141,12 @@ export default function TodoApp() {
 
   useEffect(() => {
     const entry = workspace?.daily_entries.find((item) => item.date === dailyDate);
-    const selectedActivity = entry?.activities?.find((item) => String(item.task_id) === activityTaskId) || entry?.activities?.[0];
-    const taskId = selectedActivity?.task_id ?? workspace?.tasks.find((item) => String(item.id) === activityTaskId)?.id ?? workspace?.tasks[0]?.id ?? "";
-    setActivityTaskId(taskId === "" ? "" : String(taskId));
-    setActivityDraft(selectedActivity?.content || "");
-  }, [workspace, dailyDate]);
+    const notes = Object.fromEntries((entry?.activities || []).map((activity) => [activity.task_id, {
+      done: activity.done || activity.content || "",
+      not_done: activity.not_done || "",
+    }]));
+    setDailyTaskNotes(notes);
+  }, [workspace?.daily_entries, dailyDate]);
 
   const rootTasks = useMemo(() => workspace?.tasks.filter((task) => !task.parent_id) || [], [workspace]);
   const tasksByParent = useMemo(() => {
@@ -138,9 +159,9 @@ export default function TodoApp() {
   const taskTags = useMemo(() => [...new Set((workspace?.tasks || []).map((task) => task.tag?.trim()).filter(Boolean))].sort((left, right) => left.localeCompare(right, "ja")), [workspace]);
   const visibleRootTasks = rootTasks.filter((task) => !filterTag || task.tag === filterTag || (tasksByParent.get(task.id) || []).some((child) => child.tag === filterTag));
   const selectedEntry = workspace?.daily_entries.find((item) => item.date === dailyDate);
-  const todayPlan = workspace?.daily_plans.find((item) => item.date === localDateString()) || { task_ids: [], completed_task_ids: [] };
-  const todayPlanTasks = workspace?.tasks.filter((task) => todayPlan.task_ids.includes(task.id)) || [];
-  const availableTodayTasks = workspace?.tasks.filter((task) => !todayPlan.task_ids.includes(task.id)) || [];
+  const selectedPlan = workspace?.daily_plans.find((item) => item.date === dailyDate) || { task_ids: [], completed_task_ids: [] };
+  const selectedPlanTasks = workspace?.tasks.filter((task) => selectedPlan.task_ids.includes(task.id)) || [];
+  const availablePlanTasks = workspace?.tasks.filter((task) => !selectedPlan.task_ids.includes(task.id)) || [];
   const daysRemaining = workspace?.goal.target_date
     ? Math.ceil((new Date(`${workspace.goal.target_date}T00:00:00`) - new Date(`${localDateString()}T00:00:00`)) / 86_400_000)
     : null;
@@ -170,12 +191,13 @@ export default function TodoApp() {
   async function addTask(event, parentId = null) {
     event.preventDefault();
     const title = parentId ? childTitle : taskTitle;
+    const tag = parentId ? childTag : taskTag;
     if (!title.trim()) return;
     const saved = await refreshAfter(() => request("/api/tasks", {
       method: "POST",
-      body: JSON.stringify({ task: { title: title.trim(), parent_id: parentId, due_date: parentId ? null : taskDate, tag: taskTag } }),
+      body: JSON.stringify({ task: { title: title.trim(), parent_id: parentId, due_date: parentId ? null : taskDate, tag } }),
     }), parentId ? "子課題を追加しました。" : "課題を追加しました。");
-    if (saved && parentId) { setChildTitle(""); setChildParent(null); setTaskTag(""); }
+    if (saved && parentId) { setChildTitle(""); setChildParent(null); setChildTag(""); }
     if (saved && !parentId) { setTaskTitle(""); setTaskDate(""); setTaskTag(""); }
   }
 
@@ -184,34 +206,39 @@ export default function TodoApp() {
   }
 
   async function updateTask(task, changes) {
-    await refreshAfter(() => request(`/api/tasks/${task.id}`, {
+    return refreshAfter(() => request(`/api/tasks/${task.id}`, {
       method: "PATCH", body: JSON.stringify({ task: changes }),
     }), "計画を更新しました。");
   }
 
   async function removeTask(task) {
-    const hasChildren = (tasksByParent.get(task.id) || []).length > 0;
-    const prompt = hasChildren ? "この課題と子課題を削除しますか？" : "この課題を削除しますか？";
-    if (!window.confirm(prompt)) return;
-    await refreshAfter(() => request(`/api/tasks/${task.id}`, { method: "DELETE" }), "課題を削除しました。");
+    setTaskToDelete(task);
+  }
+
+  async function confirmRemoveTask() {
+    if (!taskToDelete) return;
+    const removed = await refreshAfter(() => request(`/api/tasks/${taskToDelete.id}`, { method: "DELETE" }), "課題を削除しました。");
+    if (removed) setTaskToDelete(null);
   }
 
   async function saveDaily(event) {
     event.preventDefault();
-    if (!activityTaskId || !activityDraft.trim()) {
-      setError("課題を選び、今日行ったことを入力してください。");
+    if (selectedPlanTasks.length === 0) {
+      setError("記録する課題を「今日やること」に追加してください。");
       return;
     }
-    const task = workspace.tasks.find((item) => String(item.id) === activityTaskId);
-    const activities = [...(selectedEntry?.activities || [])];
-    const activity = { task_id: Number(activityTaskId), task_title: task?.title || "", content: activityDraft.trim() };
-    const existingIndex = activities.findIndex((item) => String(item.task_id) === activityTaskId);
-    if (existingIndex >= 0) activities[existingIndex] = activity;
-    else activities.push(activity);
+    const plannedIds = new Set(selectedPlanTasks.map((task) => task.id));
+    const activities = (selectedEntry?.activities || []).filter((item) => !plannedIds.has(Number(item.task_id)));
+    selectedPlanTasks.forEach((task) => {
+      const note = dailyTaskNotes[task.id] || {};
+      const done = (note.done || "").trim();
+      const notDone = (note.not_done || "").trim();
+      if (done || notDone) activities.push({ task_id: task.id, task_title: task.title, done, not_done: notDone });
+    });
     await refreshAfter(() => request(`/api/daily_entries/${dailyDate}`, {
       method: "PUT",
       body: JSON.stringify({ daily_entry: { activities } }),
-    }), "課題の記録を保存しました。");
+    }), "今日の記録を保存しました。");
   }
 
   async function saveTodayPlan(taskIds, completedTaskIds) {
@@ -219,12 +246,12 @@ export default function TodoApp() {
     setError("");
     setNotice("");
     try {
-      const plan = await request(`/api/daily_plans/${localDateString()}`, {
+      const plan = await request(`/api/daily_plans/${dailyDate}`, {
         method: "PUT",
         body: JSON.stringify({ daily_plan: { task_ids: taskIds, completed_task_ids: completedTaskIds } }),
       });
       setWorkspace((current) => ({ ...current, daily_plans: [...current.daily_plans.filter((item) => item.date !== plan.date), plan] }));
-      setNotice("今日やることを更新しました。");
+      setNotice("この日にやることを更新しました。");
     } catch (requestError) {
       setError(requestError.message);
     } finally {
@@ -233,27 +260,21 @@ export default function TodoApp() {
   }
 
   function addTodayTask() {
-    const taskId = Number(todayTaskChoice || availableTodayTasks[0]?.id);
+    const taskId = Number(todayTaskChoice || availablePlanTasks[0]?.id);
     if (!taskId) return;
-    saveTodayPlan([...todayPlan.task_ids, taskId], todayPlan.completed_task_ids);
+    saveTodayPlan([...selectedPlan.task_ids, taskId], selectedPlan.completed_task_ids);
     setTodayTaskChoice("");
   }
 
   function toggleTodayTask(task, completed) {
     const completedIds = completed
-      ? [...todayPlan.completed_task_ids, task.id]
-      : todayPlan.completed_task_ids.filter((id) => id !== task.id);
-    saveTodayPlan(todayPlan.task_ids, completedIds);
+      ? [...selectedPlan.completed_task_ids, task.id]
+      : selectedPlan.completed_task_ids.filter((id) => id !== task.id);
+    saveTodayPlan(selectedPlan.task_ids, completedIds);
   }
 
   function removeTodayTask(task) {
-    saveTodayPlan(todayPlan.task_ids.filter((id) => id !== task.id), todayPlan.completed_task_ids.filter((id) => id !== task.id));
-  }
-
-  function selectActivityTask(taskId) {
-    setActivityTaskId(taskId);
-    const activity = selectedEntry?.activities?.find((item) => String(item.task_id) === taskId);
-    setActivityDraft(activity?.content || "");
+    saveTodayPlan(selectedPlan.task_ids.filter((id) => id !== task.id), selectedPlan.completed_task_ids.filter((id) => id !== task.id));
   }
 
   function chooseDaily(date) {
@@ -279,6 +300,8 @@ export default function TodoApp() {
       </nav>
 
       {(error || notice) && <div className={`toast ${error ? "toast-error" : "toast-success"}`} role={error ? "alert" : "status"}>{error || notice}<button type="button" onClick={() => { setError(""); setNotice(""); }} aria-label="閉じる">×</button></div>}
+
+      {taskToDelete && <div className="dialog-backdrop"><section className="confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="delete-dialog-title" aria-describedby="delete-dialog-description"><span className="confirm-dialog-icon">!</span><h2 id="delete-dialog-title">課題を削除しますか？</h2><p id="delete-dialog-description">「{taskToDelete.title}」{(tasksByParent.get(taskToDelete.id) || []).length ? "とその子課題" : ""}を削除します。この操作は取り消せません。</p><div className="confirm-dialog-actions"><button type="button" className="button button-light" disabled={busy} onClick={() => setTaskToDelete(null)}>キャンセル</button><button type="button" className="button button-danger" disabled={busy} onClick={confirmRemoveTask}>{busy ? "削除中…" : "削除する"}</button></div></section></div>}
 
       {view === "overview" && (
         <section className="view-content">
@@ -317,10 +340,10 @@ export default function TodoApp() {
             {rootTasks.length === 0 ? <div className="plan-empty"><span className="empty-spark">✳</span><h3>最初の一歩を決めましょう</h3><p>目標に近づくために、まず取り組む課題を追加してください。</p></div> : visibleRootTasks.length === 0 ? <div className="plan-empty filter-empty"><span className="empty-spark">⌕</span><h3>「{filterTag}」の課題はありません</h3><p>別のタグを選ぶか、すべての課題を表示してください。</p><button type="button" className="button button-light" onClick={() => setFilterTag("")}>すべて表示</button></div> : <div className="wbs-list">{visibleRootTasks.map((task, index) => {
               const allChildren = tasksByParent.get(task.id) || [];
               const children = filterTag ? allChildren.filter((child) => child.tag === filterTag) : allChildren;
-              return <article className="wbs-group" key={task.id}><div className="wbs-row wbs-parent"><span className="wbs-index">{String(index + 1).padStart(2, "0")}</span><span className={`task-status-dot ${task.progress >= 100 ? "is-done" : ""}`} /><div className="wbs-main"><strong>{task.title}</strong><div className="wbs-meta"><span>{children.length ? `${children.length} 個の子課題` : "課題"}</span><span className="meta-separator">·</span><span>{task.due_date ? `目標日 ${formatDate(task.due_date)}` : "日付未設定"}</span><input className="task-tag-input" value={task.tag || ""} placeholder="＋ タグ" aria-label={`${task.title}のタグ`} maxLength={20} onChange={(event) => changeTaskTag(task, event.target.value)} onBlur={() => updateTask(task, { tag: workspace.tasks.find((item) => item.id === task.id)?.tag || "" })} /></div><div className="mini-progress"><span style={{ width: `${task.progress}%` }} /></div></div><span className="wbs-percent">{task.progress}%</span><button type="button" className="icon-button" onClick={() => { setChildParent(childParent === task.id ? null : task.id); setChildTitle(""); }} aria-label={`${task.title}に子課題を追加`}>＋</button><button type="button" className="icon-button delete-icon" onClick={() => removeTask(task)} aria-label={`${task.title}を削除`}>×</button></div>
+              return <article className="wbs-group" key={task.id}><div className="wbs-row wbs-parent"><span className="wbs-index">{String(index + 1).padStart(2, "0")}</span><span className={`task-status-dot ${task.progress >= 100 ? "is-done" : ""}`} /><div className="wbs-main"><EditableTaskTitle task={task} onSave={updateTask} disabled={busy} /><div className="wbs-meta"><span>{children.length ? `${children.length} 個の子課題` : "課題"}</span><span className="meta-separator">·</span><span>{task.due_date ? `目標日 ${formatDate(task.due_date)}` : "日付未設定"}</span><input className="task-tag-input" value={task.tag || ""} placeholder="＋ タグ" aria-label={`${task.title}のタグ`} maxLength={20} onChange={(event) => changeTaskTag(task, event.target.value)} onBlur={() => updateTask(task, { tag: workspace.tasks.find((item) => item.id === task.id)?.tag || "" })} /></div><div className="mini-progress"><span style={{ width: `${task.progress}%` }} /></div></div><span className="wbs-percent">{task.progress}%</span><button type="button" className="icon-button" onClick={() => { setChildParent(childParent === task.id ? null : task.id); setChildTitle(""); setChildTag(""); }} aria-label={`${task.title}に子課題を追加`}>＋</button><button type="button" className="icon-button delete-icon" onClick={() => removeTask(task)} aria-label={`${task.title}を削除`}>×</button></div>
                 {!children.length && <div className="task-detail-row"><span className="detail-indent"/><span className="detail-label">進捗</span><TaskProgress task={task} onChange={(item, progress) => updateTask(item, { progress })} /><span className="detail-spacer"/><span className="detail-label">日付</span><input className="date-inline" type="date" value={task.due_date || ""} aria-label={`${task.title}の日付`} onChange={(event) => updateTask(task, { due_date: event.target.value })} /><button type="button" className="icon-button delete-child" onClick={() => removeTask(task)} aria-label={`${task.title}を削除`}>×</button></div>}
-                {children.map((child) => <div className="wbs-row wbs-child" key={child.id}><span className="child-branch"/><span className={`task-status-dot ${child.progress >= 100 ? "is-done" : ""}`} /><div className="wbs-main"><strong>{child.title}</strong><div className="wbs-meta"><span>子課題</span><span className="meta-separator">·</span><span>{child.due_date ? `目標日 ${formatDate(child.due_date)}` : "日付未設定"}</span><input className="task-tag-input" value={child.tag || ""} placeholder="＋ タグ" aria-label={`${child.title}のタグ`} maxLength={20} onChange={(event) => changeTaskTag(child, event.target.value)} onBlur={() => updateTask(child, { tag: workspace.tasks.find((item) => item.id === child.id)?.tag || "" })} /></div><div className="mini-progress"><span style={{ width: `${child.progress}%` }} /></div></div><TaskProgress task={child} onChange={(item, progress) => updateTask(item, { progress })} /><button type="button" className="icon-button delete-child" onClick={() => removeTask(child)} aria-label={`${child.title}を削除`}>×</button></div>)}
-                {childParent === task.id && <form className="child-task-form" onSubmit={(event) => addTask(event, task.id)}><span className="child-branch"/><span className="new-task-plus">↳</span><input autoFocus value={childTitle} onChange={(event) => setChildTitle(event.target.value)} placeholder={`${task.title} の子課題`} aria-label="子課題" maxLength={160} /><input value={taskTag} onChange={(event) => setTaskTag(event.target.value)} placeholder="タグ" aria-label="子課題のタグ" maxLength={20} /><button type="submit" className="button button-light" disabled={busy || !childTitle.trim()}>追加</button><button type="button" className="icon-button" onClick={() => setChildParent(null)} aria-label="キャンセル">×</button></form>}
+                {children.map((child) => <div className="wbs-row wbs-child" key={child.id}><span className="child-branch"/><span className={`task-status-dot ${child.progress >= 100 ? "is-done" : ""}`} /><div className="wbs-main"><EditableTaskTitle task={child} onSave={updateTask} disabled={busy} /><div className="wbs-meta"><span>子課題</span><span className="meta-separator">·</span><span>{child.due_date ? `目標日 ${formatDate(child.due_date)}` : "日付未設定"}</span><input className="task-tag-input" value={child.tag || ""} placeholder="＋ タグ" aria-label={`${child.title}のタグ`} maxLength={20} onChange={(event) => changeTaskTag(child, event.target.value)} onBlur={() => updateTask(child, { tag: workspace.tasks.find((item) => item.id === child.id)?.tag || "" })} /></div><div className="mini-progress"><span style={{ width: `${child.progress}%` }} /></div></div><TaskProgress task={child} onChange={(item, progress) => updateTask(item, { progress })} /><button type="button" className="icon-button delete-child" onClick={() => removeTask(child)} aria-label={`${child.title}を削除`}>×</button></div>)}
+                {childParent === task.id && <form className="child-task-form" onSubmit={(event) => addTask(event, task.id)}><span className="child-branch"/><span className="new-task-plus">↳</span><input autoFocus value={childTitle} onChange={(event) => setChildTitle(event.target.value)} placeholder={`${task.title} の子課題`} aria-label="子課題" maxLength={160} /><input value={childTag} onChange={(event) => setChildTag(event.target.value)} placeholder="タグ" aria-label="子課題のタグ" maxLength={20} /><button type="submit" className="button button-light" disabled={busy || !childTitle.trim()}>追加</button><button type="button" className="icon-button" onClick={() => setChildParent(null)} aria-label="キャンセル">×</button></form>}
               </article>;
             })}</div>}
           </section>
@@ -332,24 +355,19 @@ export default function TodoApp() {
         <section className="view-content daily-view">
           <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot" />A MOMENT FOR TODAY</div><h1>今日の一歩を、<em>記録しよう。</em></h1><p>課題を選んで、今日取り組んだことを書き留めましょう。</p></div><div className="daily-date-control"><label htmlFor="daily-date">記録する日</label><input id="daily-date" type="date" value={dailyDate} onChange={(event) => setDailyDate(event.target.value)} /></div></div>
           <div className="daily-progress-banner"><span className="daily-banner-icon">✳</span><div><span>{workspace.goal.title}</span><strong>現在の達成率 <b>{workspace.progress}%</b></strong></div><div className="daily-banner-track"><span style={{ width: `${workspace.progress}%` }} /></div></div>
-          <section className="surface today-plan-card">
-            <div className="section-heading"><div><div className="section-label">TODAY'S PLAN</div><h2>今日やること <span className="entry-count">{todayPlan.completed_task_ids.length}/{todayPlanTasks.length}</span></h2></div></div>
-            {todayPlanTasks.length === 0 ? <p className="today-plan-empty">今日取り組む課題を追加しましょう。</p> : <div className="today-plan-list">{todayPlanTasks.map((task) => {
+          <form className="surface today-plan-card" onSubmit={saveDaily}>
+            <div className="section-heading"><div><div className="section-label">TODAY'S PLAN</div><h2>{dailyDate === localDateString() ? "今日やること" : "この日にやること"} <span className="entry-count">{selectedPlan.completed_task_ids.length}/{selectedPlanTasks.length}</span></h2></div></div>
+            {selectedPlanTasks.length === 0 ? <p className="today-plan-empty">この日に取り組む課題を追加しましょう。</p> : <div className="today-plan-list">{selectedPlanTasks.map((task) => {
               const remainingDays = daysUntil(task.due_date);
               const badgeText = remainingDays === null ? null : remainingDays < 0 ? `期限超過 ${Math.abs(remainingDays)}日` : remainingDays === 0 ? "今日が期日" : `あと${remainingDays}日`;
-              return <div className={`today-plan-item ${todayPlan.completed_task_ids.includes(task.id) ? "is-complete" : ""}`} key={task.id}><label><input type="checkbox" checked={todayPlan.completed_task_ids.includes(task.id)} disabled={busy} onChange={(event) => toggleTodayTask(task, event.target.checked)} /><span className="today-plan-task">{task.parent_id ? "↳ " : ""}{task.title}</span></label>{badgeText && <span className={`due-badge ${remainingDays < 3 ? "is-urgent" : ""}`}>{badgeText}</span>}<button type="button" className="today-plan-remove" disabled={busy} onClick={() => removeTodayTask(task)} aria-label={`${task.title}を今日のリストから削除`}>×</button></div>;
+              const note = dailyTaskNotes[task.id] || {};
+              return <div className={`today-plan-item ${selectedPlan.completed_task_ids.includes(task.id) ? "is-complete" : ""}`} key={task.id}><div className="today-plan-item-heading"><label><input type="checkbox" checked={selectedPlan.completed_task_ids.includes(task.id)} disabled={busy} onChange={(event) => toggleTodayTask(task, event.target.checked)} /><span className="today-plan-task">{task.parent_id ? "↳ " : ""}{task.title}</span></label>{badgeText && <span className={`due-badge ${remainingDays < 3 ? "is-urgent" : ""}`}>{badgeText}</span>}<button type="button" className="today-plan-remove" disabled={busy} onClick={() => removeTodayTask(task)} aria-label={`${task.title}をこの日のリストから削除`}>×</button></div><div className="daily-task-notes"><label><span className="reflection-title">できたこと</span><textarea value={note.done || ""} rows={3} maxLength={4000} placeholder="取り組めたことを書きましょう" onChange={(event) => setDailyTaskNotes((current) => ({ ...current, [task.id]: { ...current[task.id], done: event.target.value } }))} /></label><label><span className="reflection-title">できなかったこと</span><textarea value={note.not_done || ""} rows={3} maxLength={4000} placeholder="できなかったことや次にやることを書きましょう" onChange={(event) => setDailyTaskNotes((current) => ({ ...current, [task.id]: { ...current[task.id], not_done: event.target.value } }))} /></label></div></div>;
             })}</div>}
-            {availableTodayTasks.length > 0 && <div className="today-plan-add"><label className="sr-only" htmlFor="today-task-choice">今日やる課題を選ぶ</label><select id="today-task-choice" value={todayTaskChoice || availableTodayTasks[0]?.id || ""} onChange={(event) => setTodayTaskChoice(event.target.value)}><option value="" disabled>課題を選ぶ</option>{availableTodayTasks.map((task) => <option key={task.id} value={task.id}>{task.parent_id ? "　↳ " : ""}{task.title}</option>)}</select><button type="button" className="button button-light" disabled={busy} onClick={addTodayTask}>追加 ＋</button></div>}
-            {workspace.tasks.length === 0 && <p className="today-plan-empty">計画に課題を追加すると、ここで今日のリストを作れます。</p>}
-          </section>
-          <form className="daily-form surface" onSubmit={saveDaily}>
-            {workspace.tasks.length === 0 ? <div className="plan-empty"><span className="empty-spark">✳</span><h3>記録する課題を追加しましょう</h3><p>計画で課題を作ると、課題ごとの今日の記録を残せます。</p><button type="button" className="button button-light" onClick={() => setView("plan")}>計画を開く</button></div> : <>
-              <label className="activity-task-field"><span className="reflection-title">記録する課題</span><select value={activityTaskId} onChange={(event) => selectActivityTask(event.target.value)} aria-label="記録する課題">{workspace.tasks.map((task) => <option key={task.id} value={task.id}>{task.parent_id ? "　↳ " : ""}{task.title}</option>)}</select></label>
-              <label className="activity-note-field"><span className="reflection-icon done-icon">✎</span><span className="reflection-title">今日行ったこと</span><span className="reflection-hint">進めた内容や気づきを書き留めましょう。</span><textarea value={activityDraft} onChange={(event) => setActivityDraft(event.target.value)} placeholder="例：資料の構成を決め、参考資料を3件確認した。" rows={6} maxLength={4000} /></label>
-              <div className="daily-form-footer"><span>{selectedEntry?.activities?.some((item) => String(item.task_id) === activityTaskId) ? "この課題の記録を編集中" : "課題ごとに1日1件の記録を保存できます"}</span><button type="submit" className="button button-dark" disabled={busy || !activityTaskId || !activityDraft.trim()}>この課題の記録を保存 <span>↗</span></button></div>
-            </>}
+            {availablePlanTasks.length > 0 && <div className="today-plan-add"><label className="sr-only" htmlFor="today-task-choice">この日にやる課題を選ぶ</label><select id="today-task-choice" value={availablePlanTasks.some((task) => String(task.id) === todayTaskChoice) ? todayTaskChoice : String(availablePlanTasks[0]?.id || "")} onChange={(event) => setTodayTaskChoice(event.target.value)}><option value="" disabled>課題を選ぶ</option>{availablePlanTasks.map((task) => <option key={task.id} value={task.id}>{task.parent_id ? "　↳ " : ""}{task.title}</option>)}</select><button type="button" className="button button-light" disabled={busy} onClick={addTodayTask}>追加 ＋</button></div>}
+            {workspace.tasks.length === 0 && <div className="today-plan-empty"><p>計画に課題を追加すると、ここで今日のリストを作れます。</p><button type="button" className="button button-light" onClick={() => setView("plan")}>計画を開く</button></div>}
+            {selectedPlanTasks.length > 0 && <div className="daily-form-footer"><span>課題ごとに、できたこと・できなかったことを記録できます</span><button type="submit" className="button button-dark" disabled={busy}>今日の記録を保存 <span>↗</span></button></div>}
           </form>
-          {selectedEntry?.activities?.length > 0 && <section className="surface today-activity-list"><div className="section-heading"><div><div className="section-label">TODAY'S WORK</div><h2>この日の記録 <span className="entry-count">{selectedEntry.activities.length}</span></h2></div></div>{selectedEntry.activities.map((activity) => <button type="button" className={`today-activity ${String(activity.task_id) === activityTaskId ? "active" : ""}`} key={`${activity.task_id}-${activity.task_title}`} onClick={() => selectActivityTask(String(activity.task_id))}><span className="activity-task-name">{activity.task_title}</span><span className="activity-content">{activity.content}</span><span className="activity-edit">編集 →</span></button>)}</section>}
+          {selectedEntry?.activities?.some((activity) => !selectedPlan.task_ids.includes(Number(activity.task_id))) && <section className="surface today-activity-list"><div className="section-heading"><div><div className="section-label">PREVIOUS NOTES</div><h2>この日の以前の記録</h2></div></div>{selectedEntry.activities.filter((activity) => !selectedPlan.task_ids.includes(Number(activity.task_id))).map((activity) => <div className="today-activity" key={`${activity.task_id}-${activity.task_title}`}><span className="activity-task-name">{activity.task_title}</span>{activity.done || activity.content ? <p><strong>できたこと</strong>{activity.done || activity.content}</p> : null}{activity.not_done ? <p><strong>できなかったこと</strong>{activity.not_done}</p> : null}</div>)}</section>}
           {selectedEntry?.done || selectedEntry?.not_done ? <section className="surface legacy-entry"><strong>以前の振り返り</strong>{selectedEntry.done && <p><span>できたこと</span>{selectedEntry.done}</p>}{selectedEntry.not_done && <p><span>できなかったこと</span>{selectedEntry.not_done}</p>}</section> : null}
           <div className="gentle-note"><span>✦</span> 小さな一歩も、確かな前進です。</div>
         </section>
@@ -360,7 +378,7 @@ export default function TodoApp() {
           <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot" />LOOKING BACK</div><h1>歩みを見つめて、<em>次へ。</em></h1><p>積み重ねを振り返ると、次に進むヒントが見えてくる。</p></div><button type="button" className="button button-dark" onClick={() => setView("daily")}>今日を記録する <span>↗</span></button></div>
           <section className="surface chart-card review-chart"><div className="section-heading"><div><div className="section-label">YOUR MOMENTUM</div><h2>進捗のうつりかわり</h2></div><span className="review-current">現在 <strong>{workspace.progress}%</strong></span></div><ProgressChart history={workspace.progress_history} progress={workspace.progress} /></section>
           <section className="surface review-card"><div className="section-heading"><div><div className="section-label">DAILY NOTES</div><h2>日々の振り返り <span className="entry-count">{workspace.daily_entries.length}</span></h2></div></div>
-            {workspace.daily_entries.length === 0 ? <div className="plan-empty review-empty"><span className="empty-spark">✳</span><h3>まだ記録はありません</h3><p>課題を選んで、その日に取り組んだことを残しましょう。</p><button type="button" className="button button-light" onClick={() => setView("daily")}>最初の記録を書く</button></div> : <div className="journal-list">{[...workspace.daily_entries].reverse().map((entry) => <article className="journal-entry" key={entry.date}><button type="button" className="journal-date" onClick={() => chooseDaily(entry.date)}><span>{formatDate(entry.date, { month: "short", day: "numeric" })}</span><small>{formatDate(entry.date, { weekday: "short" })}</small><b>→</b></button><div className="journal-content">{entry.activities?.map((activity) => <div className="journal-activity" key={`${activity.task_id}-${activity.task_title}`}><span className="journal-label"><i className="journal-check">✓</i>{activity.task_title}</span><p>{activity.content}</p></div>)}{entry.activities?.length && (entry.done || entry.not_done) ? <div className="journal-legacy"><span>以前の振り返り</span><p>{entry.done}</p><p>{entry.not_done}</p></div> : null}{!entry.activities?.length && <><div className="journal-column"><span className="journal-label"><i className="journal-check">✓</i>できたこと</span><p>{entry.done || <span className="muted-copy">記録なし</span>}</p></div><div className="journal-column"><span className="journal-label"><i className="journal-reflect">↗</i>できなかったこと</span><p>{entry.not_done || <span className="muted-copy">記録なし</span>}</p></div></>}</div><div className="journal-progress"><span>進捗</span><strong>{entry.progress ?? 0}%</strong></div></article>)}</div>}
+            {workspace.daily_entries.length === 0 ? <div className="plan-empty review-empty"><span className="empty-spark">✳</span><h3>まだ記録はありません</h3><p>課題を選んで、その日に取り組んだことを残しましょう。</p><button type="button" className="button button-light" onClick={() => setView("daily")}>最初の記録を書く</button></div> : <div className="journal-list">{[...workspace.daily_entries].reverse().map((entry) => <article className="journal-entry" key={entry.date}><button type="button" className="journal-date" onClick={() => chooseDaily(entry.date)}><span>{formatDate(entry.date, { month: "short", day: "numeric" })}</span><small>{formatDate(entry.date, { weekday: "short" })}</small><b>→</b></button><div className="journal-content">{entry.activities?.map((activity) => <div className="journal-activity" key={`${activity.task_id}-${activity.task_title}`}><span className="journal-label"><i className="journal-check">✓</i>{activity.task_title}</span>{activity.done || activity.content ? <p><strong>できたこと</strong>{activity.done || activity.content}</p> : null}{activity.not_done ? <p><strong>できなかったこと</strong>{activity.not_done}</p> : null}</div>)}{entry.activities?.length && (entry.done || entry.not_done) ? <div className="journal-legacy"><span>以前の振り返り</span><p>{entry.done}</p><p>{entry.not_done}</p></div> : null}{!entry.activities?.length && <><div className="journal-column"><span className="journal-label"><i className="journal-check">✓</i>できたこと</span><p>{entry.done || <span className="muted-copy">記録なし</span>}</p></div><div className="journal-column"><span className="journal-label"><i className="journal-reflect">↗</i>できなかったこと</span><p>{entry.not_done || <span className="muted-copy">記録なし</span>}</p></div></>}</div><div className="journal-progress"><span>進捗</span><strong>{entry.progress ?? 0}%</strong></div></article>)}</div>}
           </section>
           <footer className="page-footer"><span>NOTICE YOUR PROGRESS.</span><span>振り返りから、次の一歩へ。</span></footer>
         </section>

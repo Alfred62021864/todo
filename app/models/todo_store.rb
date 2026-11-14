@@ -234,15 +234,19 @@ module TodoStore
     Array(activities).filter_map do |activity|
       attributes = activity.to_h.symbolize_keys
       content = attributes[:content].to_s.strip
-      next if content.blank?
+      done = attributes[:done].to_s.strip
+      not_done = attributes[:not_done].to_s.strip
+      next if content.blank? && done.blank? && not_done.blank?
 
       task_id = attributes[:task_id].presence&.to_i
       task = task_id && @state[:tasks].find { |item| item[:id] == task_id }
       task_title = task&.dig(:title) || attributes[:task_title].to_s.strip
       raise ArgumentError, "課題を選択してください" if task_title.blank?
-      raise ArgumentError, "記録は4000文字以内で入力してください" if content.length > 4000
+      raise ArgumentError, "記録は4000文字以内で入力してください" if [content, done, not_done].any? { |value| value.length > 4000 }
 
-      { task_id: task_id, task_title: task_title, content: content }
+      { task_id: task_id, task_title: task_title, done: done, not_done: not_done }.tap do |normalized|
+        normalized[:content] = content if done.blank? && not_done.blank? && content.present?
+      end
     end
   end
 
