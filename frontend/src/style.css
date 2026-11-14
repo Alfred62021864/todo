@@ -491,8 +491,10 @@ html[data-theme="dark"] .toast-error { border-color: #59403a; background: #35292
 .daily-task-notes textarea:focus { outline: 1px solid #a9bc89; border-color: #a9bc89; }
 .today-plan-task { overflow: hidden; color: #51564a; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .today-plan-item.is-complete .today-plan-task { color: #a1a69a; text-decoration: line-through; }
-.due-badge { flex: 0 0 auto; padding: 4px 7px; border: 1px solid #e4e9db; border-radius: 10px; background: #f7f9f2; color: #788b58; font-size: 8px; font-weight: 600; white-space: nowrap; }
-.due-badge.is-urgent { border-color: #f0d5d0; background: #fff2ef; color: #b84f43; }
+.today-plan-parent { margin: 3px 0 0 25px; color: #8a8f82; font-size: 9px; }
+.due-badge { flex: 0 0 auto; padding: 4px 7px; border: 1px solid #dce8cf; border-radius: 10px; background: #f2f8eb; color: #668143; font-size: 8px; font-weight: 600; white-space: nowrap; }
+.due-badge.is-warning { border-color: #f0dfaa; background: #fff8df; color: #a47a16; }
+.due-badge.is-urgent { border-color: #f0c8c3; background: #fff0ed; color: #b84f43; }
 .today-plan-remove { width: 26px; height: 26px; border: 0; border-radius: 3px; background: transparent; color: #a5aa9a; font-size: 16px; }
 .today-plan-remove:hover { background: #f6f3f1; color: #b97669; }
 .today-plan-add { display: flex; gap: 9px; margin-top: 12px; }
@@ -518,7 +520,9 @@ html[data-theme="dark"] .today-plan-empty { color: #a1a89b; }
 html[data-theme="dark"] .today-plan-list, html[data-theme="dark"] .today-plan-item { border-color: #3a4038; }
 html[data-theme="dark"] .today-plan-task { color: #dce1d5; }
 html[data-theme="dark"] .today-plan-item.is-complete .today-plan-task { color: #8d9588; }
-html[data-theme="dark"] .due-badge { border-color: #444c3c; background: #30382a; color: #c1d39d; }
+html[data-theme="dark"] .today-plan-parent { color: #a1a89b; }
+html[data-theme="dark"] .due-badge { border-color: #425039; background: #2d3825; color: #c1d39d; }
+html[data-theme="dark"] .due-badge.is-warning { border-color: #5a4b2c; background: #3a3220; color: #edcf78; }
 html[data-theme="dark"] .due-badge.is-urgent { border-color: #65433d; background: #3a2925; color: #f0a398; }
 html[data-theme="dark"] .today-plan-remove:hover { background: #352925; }
 html[data-theme="dark"] .today-plan-add select { border-color: #41483e; background: #20241f; color: #dce1d5; }
