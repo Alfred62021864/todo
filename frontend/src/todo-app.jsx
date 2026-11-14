@@ -159,7 +159,9 @@ export default function TodoApp() {
   const visibleRootTasks = rootTasks.filter((task) => !filterTag || task.tag === filterTag || (tasksByParent.get(task.id) || []).some((child) => child.tag === filterTag));
   const selectedEntry = workspace?.daily_entries.find((item) => item.date === dailyDate);
   const savedPlan = workspace?.daily_plans.find((item) => item.date === dailyDate) || { task_ids: [], completed_task_ids: [] };
-  const selectedPlanTasks = workspace?.tasks || [];
+  const taskLeaves = workspace?.tasks.filter((task) => task.parent_id || !workspace.tasks.some((child) => child.parent_id === task.id)) || [];
+  const withinGoalPeriod = (!workspace.goal.start_date || dailyDate >= workspace.goal.start_date) && (!workspace.goal.target_date || dailyDate <= workspace.goal.target_date);
+  const selectedPlanTasks = withinGoalPeriod ? taskLeaves : [];
   const selectedPlan = { ...savedPlan, task_ids: selectedPlanTasks.map((task) => task.id), completed_task_ids: savedPlan.completed_task_ids.filter((id) => selectedPlanTasks.some((task) => task.id === id)) };
   const daysRemaining = workspace?.goal.target_date
     ? Math.ceil((new Date(`${workspace.goal.target_date}T00:00:00`) - new Date(`${localDateString()}T00:00:00`)) / 86_400_000)
@@ -344,8 +346,8 @@ export default function TodoApp() {
           <div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-dot" />A MOMENT FOR TODAY</div><h1>今日の一歩を、<em>記録しよう。</em></h1><p>課題ごとに、今日できたこと・できなかったことを書き留めましょう。</p></div><div className="daily-date-control"><label htmlFor="daily-date">記録する日</label><input id="daily-date" type="date" value={dailyDate} onChange={(event) => setDailyDate(event.target.value)} /></div></div>
           <div className="daily-progress-banner"><span className="daily-banner-icon">✳</span><div><span>{workspace.goal.title}</span><strong>現在の達成率 <b>{workspace.progress}%</b></strong></div><div className="daily-banner-track"><span style={{ width: `${workspace.progress}%` }} /></div></div>
           <form className="surface today-plan-card" onSubmit={saveDaily}>
-            <div className="section-heading"><div><div className="section-label">TODAY'S PLAN</div><h2>{dailyDate === localDateString() ? "今日やること" : "この日にやること"} <span className="entry-count">{selectedPlan.completed_task_ids.length}/{selectedPlanTasks.length}</span></h2></div></div>
-            {selectedPlanTasks.length === 0 ? <p className="today-plan-empty">この日に取り組む課題を追加しましょう。</p> : <div className="today-plan-list">{selectedPlanTasks.map((task) => {
+            <div className="section-heading"><div><div className="section-label">TASKS IN GOAL PERIOD</div><h2>{dailyDate === localDateString() ? "今日やること" : "この日にやること"} <span className="entry-count">{selectedPlan.completed_task_ids.length}/{selectedPlanTasks.length}</span></h2></div></div>
+            {selectedPlanTasks.length === 0 ? <p className="today-plan-empty">{workspace.tasks.length > 0 && !withinGoalPeriod ? "選択した日は目標期間外です。目標の開始日〜目標日の範囲で記録できます。" : "計画に課題を追加すると、ここに一覧表示されます。"}</p> : <div className="today-plan-list">{selectedPlanTasks.map((task) => {
               const remainingDays = daysUntil(task.due_date);
               const badgeText = remainingDays === null ? null : remainingDays < 0 ? `期限超過 ${Math.abs(remainingDays)}日` : remainingDays === 0 ? "今日が期日" : `あと${remainingDays}日`;
               const note = dailyTaskNotes[task.id] || {};
