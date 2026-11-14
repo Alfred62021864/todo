@@ -44,7 +44,7 @@ module TodoStore
     end
   end
 
-  def create_task(title, parent_id: nil, due_date: nil)
+  def create_task(title, parent_id: nil, due_date: nil, tag: nil)
     @lock.synchronize do
       clean_title = title.to_s.strip
       raise ArgumentError, "課題名を入力してください" if clean_title.blank?
@@ -54,7 +54,7 @@ module TodoStore
 
       task = {
         id: @state[:next_id], title: clean_title, parent_id: parent&.dig(:id),
-        due_date: normalize_date(due_date), progress: 0
+        due_date: normalize_date(due_date), progress: 0, tag: normalize_tag(tag)
       }
       @state[:next_id] += 1
       @state[:tasks] << task
@@ -69,6 +69,7 @@ module TodoStore
       task[:title] = attributes[:title].to_s.strip if attributes.key?(:title)
       raise ArgumentError, "課題名を入力してください" if task[:title].blank?
       task[:due_date] = normalize_date(attributes[:due_date]) if attributes.key?(:due_date)
+      task[:tag] = normalize_tag(attributes[:tag]) if attributes.key?(:tag)
       if attributes.key?(:progress) && !@state[:tasks].any? { |item| item[:parent_id] == task[:id] }
         task[:progress] = [[attributes[:progress].to_i, 0].max, 100].min
       end
@@ -182,6 +183,13 @@ module TodoStore
     Date.iso8601(value.to_s).iso8601
   rescue Date::Error
     raise ArgumentError, "日付を正しく入力してください"
+  end
+
+  def normalize_tag(value)
+    clean_tag = value.to_s.strip
+    raise ArgumentError, "タグは20文字以内で入力してください" if clean_tag.length > 20
+
+    clean_tag.presence
   end
 
   def deep_copy(value)

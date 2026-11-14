@@ -142,6 +142,7 @@ h1 em { color: #8eaa5b; font-family: "Playfair Display", "Noto Sans JP", serif; 
 .new-task-form input:not([type="date"]), .child-task-form input { min-width: 0; flex: 1; padding: 9px 0; border: 0; outline: 0; background: transparent; font-size: 10px; }
 .new-task-form input::placeholder, .child-task-form input::placeholder { color: #b0b3a9; }
 .new-task-form input[type="date"] { width: 119px; border: 0; outline: 0; background: transparent; color: #8c9183; font-size: 9px; }
+.new-task-form input[aria-label="課題のタグ"], .child-task-form input[aria-label="子課題のタグ"] { flex: 0 1 90px; border-left: 1px solid #eceee7; padding-left: 9px; }
 .new-task-form .button { min-height: 34px; }
 .plan-empty { display: flex; min-height: 228px; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; }
 .empty-spark { color: #aacd77; font-size: 21px; }
@@ -156,6 +157,8 @@ h1 em { color: #8eaa5b; font-family: "Playfair Display", "Noto Sans JP", serif; 
 .wbs-main { min-width: 0; flex: 1; padding: 11px 0; }
 .wbs-main > strong { display: block; overflow: hidden; color: #4b5044; font-size: 10px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .wbs-meta { display: flex; align-items: center; gap: 7px; margin-top: 4px; color: #a1a498; font-size: 8px; }
+.task-tag-input { width: 74px; padding: 2px 5px; border: 1px solid #e8eadf; border-radius: 10px; outline: 0; background: #fbfcf8; color: #77815f; font-size: 8px; }
+.task-tag-input:focus { border-color: #b8c998; }
 .meta-separator { color: #ccd0c5; }
 .mini-progress { width: min(100%, 230px); height: 3px; margin-top: 7px; }
 .wbs-percent { min-width: 33px; color: #718b4b; font: 9px var(--mono); text-align: right; }
