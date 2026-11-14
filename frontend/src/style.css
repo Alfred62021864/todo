@@ -476,19 +476,20 @@ html[data-theme="dark"] .toast-error { border-color: #59403a; background: #35292
 .activity-note-field textarea:focus { border-color: #c2d69e; box-shadow: 0 0 0 3px #f2f7e9; }
 .today-activity-list { margin-top: 14px; padding: 18px 22px 12px; }
 .today-plan-card { margin-bottom: 14px; padding: 18px 22px 16px; }
+.daily-plan-hint { margin: -14px 0 12px; color: #858a7d; font-size: 13px; }
 .today-plan-empty { margin: 14px 0 7px; color: #989c91; font-size: 10px; }
 .today-plan-list { margin-top: 12px; border-top: 1px solid #eff0eb; }
 .today-plan-item { display: block; padding: 11px 0; border-bottom: 1px solid #eff0eb; }
 .today-plan-item-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 30px; }
 .today-plan-item-heading > label { display: flex; min-width: 0; flex: 1; align-items: center; gap: 10px; cursor: pointer; }
 .today-plan-item input { width: 15px; height: 15px; accent-color: #91ad5e; }
+.daily-task-tag { flex: 0 0 auto; max-width: 130px; overflow: hidden; padding: 3px 8px; border: 1px solid #e4e9dc; border-radius: 12px; background: #fafbf7; color: #78845f; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .daily-task-notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 10px 0 1px 25px; }
 .daily-task-notes label { display: grid; gap: 5px; }
 .daily-task-notes .reflection-title { font-size: 10px; }
 .daily-task-notes textarea { width: 100%; min-height: 66px; resize: vertical; padding: 9px 10px; border: 1px solid #e8eae3; border-radius: 3px; background: #fff; color: #30332e; font: inherit; font-size: 11px; line-height: 1.6; }
 .daily-task-notes textarea:focus { outline: 1px solid #a9bc89; border-color: #a9bc89; }
-.today-plan-task { overflow: hidden; color: #51564a; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
-.today-plan-item.is-complete .today-plan-task { color: #a1a69a; text-decoration: line-through; }
+.today-plan-task { min-width: 0; flex: 1; overflow: hidden; color: #51564a; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .today-plan-parent { margin: 3px 0 0 25px; color: #8a8f82; font-size: 9px; }
 .due-badge { flex: 0 0 auto; padding: 4px 7px; border: 1px solid #dce8cf; border-radius: 10px; background: #f2f8eb; color: #668143; font-size: 8px; font-weight: 600; white-space: nowrap; }
 .due-badge.is-warning { border-color: #f0dfaa; background: #fff8df; color: #a47a16; }
@@ -515,10 +516,11 @@ html[data-theme="dark"] .toast-error { border-color: #59403a; background: #35292
 html[data-theme="dark"] .journal-legacy, html[data-theme="dark"] .journal-legacy p { border-color: #3a4038; color: #aeb5a8; }
 html[data-theme="dark"] .activity-task-field select, html[data-theme="dark"] .activity-note-field textarea { border-color: #41483e; background: #20241f; color: #dce1d5; }
 html[data-theme="dark"] .today-plan-empty { color: #a1a89b; }
+html[data-theme="dark"] .daily-plan-hint { color: #a1a89b; }
 html[data-theme="dark"] .today-plan-list, html[data-theme="dark"] .today-plan-item { border-color: #3a4038; }
 html[data-theme="dark"] .today-plan-task { color: #dce1d5; }
-html[data-theme="dark"] .today-plan-item.is-complete .today-plan-task { color: #8d9588; }
 html[data-theme="dark"] .today-plan-parent { color: #a1a89b; }
+html[data-theme="dark"] .daily-task-tag { border-color: #41483e; background: #20241f; color: #c0d69b; }
 html[data-theme="dark"] .due-badge { border-color: #425039; background: #2d3825; color: #c1d39d; }
 html[data-theme="dark"] .due-badge.is-warning { border-color: #5a4b2c; background: #3a3220; color: #edcf78; }
 html[data-theme="dark"] .due-badge.is-urgent { border-color: #65433d; background: #3a2925; color: #f0a398; }
@@ -563,7 +565,7 @@ html[data-theme="dark"] .journal-activity + .journal-activity { border-color: #3
 .overview-task-date, .page-footer, .wbs-key, .task-tag-filters > span,
 .wbs-meta, .task-tag-input, .detail-label, .date-inline, .daily-progress-banner > div:nth-child(2) > span,
 .reflection-hint, .daily-form-footer > span, .review-current, .journal-date small,
-.journal-label, .journal-progress, .today-plan-parent, .due-badge, .activity-edit,
+.journal-label, .journal-progress, .today-plan-parent, .due-badge, .daily-task-tag, .activity-edit,
 .legacy-entry > strong, .legacy-entry p span, .journal-legacy, .loading-screen {
   font-size: 12px;
 }
