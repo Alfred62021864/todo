@@ -5,6 +5,7 @@ Rails.application.routes.draw do
   patch "/api/goal", to: "goals#update"
   resources :tasks, only: %i[create update destroy], path: "/api/tasks"
   put "/api/daily_entries/:date", to: "daily_entries#upsert"
+  put "/api/daily_plans/:date", to: "daily_plans#upsert"
 
   resources :todos, only: %i[index create update destroy], defaults: { format: :json }, path: "/api/todos"
 end

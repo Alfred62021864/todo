@@ -84,7 +84,34 @@ module TodoStore
       ids = [task[:id]]
       ids.concat(@state[:tasks].select { |item| item[:parent_id] == task[:id] }.map { |item| item[:id] })
       @state[:tasks].reject! { |item| ids.include?(item[:id]) }
+      @state[:daily_plans].each do |plan|
+        plan[:task_ids] -= ids
+        plan[:completed_task_ids] -= ids
+      end
       persist
+    end
+  end
+
+  def save_daily_plan(date, task_ids:, completed_task_ids:)
+    @lock.synchronize do
+      date_key = Date.iso8601(date.to_s).iso8601
+      valid_ids = @state[:tasks].map { |task| task[:id] }
+      clean_task_ids = Array(task_ids).filter_map do |id|
+        numeric_id = Integer(id.to_s, 10) rescue nil
+        numeric_id if numeric_id && valid_ids.include?(numeric_id)
+      end.uniq
+      clean_completed_ids = Array(completed_task_ids).filter_map do |id|
+        numeric_id = Integer(id.to_s, 10) rescue nil
+        numeric_id if numeric_id && clean_task_ids.include?(numeric_id)
+      end.uniq
+      plan = { date: date_key, task_ids: clean_task_ids, completed_task_ids: clean_completed_ids }
+      @state[:daily_plans].reject! { |item| item[:date] == date_key }
+      @state[:daily_plans] << plan
+      @state[:daily_plans].sort_by! { |item| item[:date] }
+      persist
+      deep_copy(plan)
+    rescue Date::Error
+      raise ArgumentError, "日付を正しく入力してください"
     end
   end
 
@@ -142,7 +169,7 @@ module TodoStore
   def default_state
     {
       goal: { title: "新しい目標", description: "目標に向かう理由や、達成したいことを書きましょう。", start_date: Date.current.iso8601, target_date: nil },
-      tasks: [], daily_entries: [], progress_history: [], next_id: 1
+      tasks: [], daily_entries: [], daily_plans: [], progress_history: [], next_id: 1
     }
   end
 
@@ -160,6 +187,7 @@ module TodoStore
       state[:goal] = defaults[:goal].merge(state[:goal] || {})
       state[:tasks] ||= []
       state[:daily_entries] ||= []
+      state[:daily_plans] ||= []
       state[:progress_history] ||= []
       state[:next_id] ||= (state[:tasks].map { |task| task[:id].to_i }.max || 0) + 1
     end
